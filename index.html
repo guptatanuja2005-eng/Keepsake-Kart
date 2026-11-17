@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keepsake Kart — Premium Die-Cast Collectibles</title>
+<meta name="description" content="Hot Wheels, imported die-cast and collector pieces, shipped across India.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="bar">All-India delivery · 100% authentic · Prepaid orders</div>
+<header class="hd">
+  <a class="logo d" href="#top">Keepsake <b>Kart</b></a>
+  <label class="srch"><span class="sr">Search cars</span><input id="q" type="search" placeholder="Search cars…" autocomplete="off"></label>
+  <button class="cartbtn" id="openCart" type="button" data-act="cart">Cart <span id="cnt">0</span></button>
+</header>
+<main id="top">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">1:64 scale · Curated for collectors</p>
+      <h1 class="d">Small cars.<br><b>Serious</b> collection.</h1>
+      <p class="lead">Every piece is a mini treasure — hand-picked Hot Wheels, imports and collector finds, shipped across India.</p>
+      <a class="btn solid" href="#shop">Shop the collection</a>
+    </div>
+    <div class="heroart" id="heroart" aria-hidden="true"></div>
+  </section>
+  <section id="shop" class="wrap">
+    <p class="eyebrow">The garage</p>
+    <h2 class="d">All Products</h2>
+    <div class="tools">
+      <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+      <label class="chk"><input type="checkbox" id="stock"> In stock only</label>
+      <label class="sel"><span class="sr">Sort</span><select id="sort"><option value="feat">Featured</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option></select></label>
+    </div>
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <p id="empty" class="empty" hidden>No cars match. Try another search or filter.</p>
+  </section>
+  <section class="wrap feats">
+    <div><h3 class="d">Authentic only</h3><p>Genuine licensed pieces. No fakes, no repacks.</p></div>
+    <div><h3 class="d">Collector-safe packing</h3><p>Cards and blisters protected so it arrives mint.</p></div>
+    <div><h3 class="d">Delivered across India</h3><p>Tracked shipping to every pin code. Prepaid only.</p></div>
+    <div><h3 class="d">Rare finds on request</h3><p>Hunting a casting? Message us and we’ll source it.</p></div>
+  </section>
+</main>
+<footer class="ft">
+  <div><div class="logo d">Keepsake <b>Kart</b></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div>
+  <p class="fine">All items are collectibles and all sales are final. © 2026 Keepsake Kart.</p>
+</footer>
+
+<div class="ov" id="ov" data-act="close"></div>
+<aside class="drawer" id="cart" aria-hidden="true" aria-label="Shopping cart">
+  <div class="dh"><h2 class="d">Your cart</h2><button type="button" class="x" data-act="close" aria-label="Close cart">✕</button></div>
+  <div id="items" class="items"></div>
+  <form id="co" class="co" novalidate>
+    <div class="tot"><span>Subtotal</span><b id="sub">Rs. 0</b></div>
+    <input name="name" placeholder="Full name" autocomplete="name" required>
+    <input name="phone" placeholder="Phone (WhatsApp)" autocomplete="tel" inputmode="tel" required>
+    <textarea name="address" placeholder="Full delivery address with pin code" rows="3" autocomplete="street-address" required></textarea>
+    <button class="btn solid" type="submit">Place order on WhatsApp</button>
+    <p class="fine">Shipping is confirmed on WhatsApp. Prepaid orders only.</p>
+  </form>
+</aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Product details"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
