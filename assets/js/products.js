@@ -1,4 +1,16 @@
-/* id, name, price (INR), category, in stock, car colour. Add photos later with an optional image field. */
+/* Categories shown on the Collections page. Categories with no products show "Coming soon". */
+window.KK_CATS = [
+  { name: "Hot Wheels", d: "Mainlines, premiums and everyday favourites." },
+  { name: "Imported", d: "Malaysian and US imports you won’t find on local shelves." },
+  { name: "Bundles", d: "Value bundles with bonus cars." },
+  { name: "Matchbox", d: "Everyday classics and movie editions." },
+  { name: "LEGO", d: "Bricks and sets for builders and collectors." },
+  { name: "Mini GT", d: "Precision-built, boxed, display-ready." },
+  { name: "Bburago", d: "Supercars and scale models." },
+  { name: "Majorette", d: "Colourful die-cast classics." }
+];
+/* Products: id, name, price (INR), category, in stock (1/0), car colour.
+   To use real photos add an images array to a product, e.g. images: ["assets/img/camaro10-1.jpg"]. */
 window.KK_PRODUCTS = [
  ["camaro10","’10 Camaro SS — Malaysian Imported",299,"Imported",1,"#E0B13C"],
  ["corv11","’11 Corvette Grand Sport",199,"Hot Wheels",1,"#C23B3B"],
@@ -16,4 +28,10 @@ window.KK_PRODUCTS = [
  ["raptor19","’19 Ford Ranger Raptor — Malaysian Imported",299,"Imported",0,"#5C6B3A"],
  ["merc19","’19 Mercedes-Benz A-Class",199,"Hot Wheels",0,"#C7C7CC"],
  ["galaxie63","1963 Ford Galaxie",180,"Hot Wheels",0,"#6B8FB5"]
-].map(function (r) { return { id: r[0], name: r[1], price: r[2], cat: r[3], stock: !!r[4], color: r[5] }; });
+].map(function (r) {
+  var d = "Authentic 1:64 scale Hot Wheels die-cast car." +
+    (r[3] === "Imported" ? " Imported edition, a sought-after pick for collectors." : "") +
+    (r[3] === "Bundles" ? " Bundle deal: the named car plus 2 random Hot Wheels." : "") +
+    (r[0] === "chiron16" ? " Note: the card has a slight crease, as stated in the title." : "");
+  return { id: r[0], name: r[1], price: r[2], cat: r[3], brand: "Hot Wheels", stock: !!r[4], color: r[5], desc: d };
+});
