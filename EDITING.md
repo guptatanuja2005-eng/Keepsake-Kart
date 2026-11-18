@@ -28,3 +28,15 @@ Copy the example in `reviews.js`. Only add reviews from real customers.
 
 ## Wishlist, recently viewed, cart
 These are saved in each visitor's own browser. They are not shared between devices.
+
+## Pre-orders
+Give a product the category `"Pre-Orders"` in `products.js`. It appears in the Pre-Orders collection with a "Pre-order" button, and checkout adds a note that pre-order items ship when stock arrives.
+
+## Legal pages
+`privacy.html` and `terms.html` describe how this site actually works (details saved in the visitor's browser, orders sent by WhatsApp or email). They are plain-language templates, not legal advice. Please read them, change anything that does not match how you run the store, and consider a legal review before you take real orders.
+
+## Share image
+`assets/img/share.png` is the preview shown when links are shared on WhatsApp or social media. The address inside each page's `og:image` tag assumes the GitHub Pages address, so update it if your site address differs.
+
+## Backend
+See `backend/README.md`. The database design is a draft and is not connected to the site yet.

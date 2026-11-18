@@ -7,7 +7,8 @@ window.KK_CATS = [
   { name: "LEGO", d: "Bricks and sets for builders and collectors." },
   { name: "Mini GT", d: "Precision-built, boxed, display-ready." },
   { name: "Bburago", d: "Supercars and scale models." },
-  { name: "Majorette", d: "Colourful die-cast classics." }
+  { name: "Majorette", d: "Colourful die-cast classics." },
+  { name: "Pre-Orders", d: "Reserve upcoming drops before they land. Give a product the category \"Pre-Orders\" to list it here." }
 ];
 /* Products: id, name, price (INR), category, in stock (1/0), car colour, optional 7th value = units in stock (a number).
    With a number, the shop shows "Only N left" and stops orders above N; qty 0 marks the product sold out.
