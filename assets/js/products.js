@@ -13,6 +13,8 @@ window.KK_CATS = [
 /* Products: id, name, price (INR), category, in stock (1/0), car colour, optional 7th value = units in stock (a number).
    With a number, the shop shows "Only N left" and stops orders above N; qty 0 marks the product sold out.
    To use real photos add an images array to a product, e.g. images: ["assets/img/camaro10-1.jpg"]. */
+/* Illustrations (drawn artwork, not photos) used until real photos are added. */
+var KK_ART = { camaro10: 1, corv11: 1, chall15: 1, batboat: 1 };
 window.KK_PRODUCTS = [
  ["camaro10","\u201910 Camaro SS \u2014 Malaysian Imported",299,"Imported",1,"#E0B13C"],
  ["corv11","\u201911 Corvette Grand Sport",199,"Hot Wheels",1,"#C23B3B"],
@@ -36,5 +38,5 @@ window.KK_PRODUCTS = [
     (r[3] === "Bundles" ? " Bundle deal: the named car plus 2 random Hot Wheels." : "") +
     (r[0] === "chiron16" ? " Note: the card has a slight crease, as stated in the title." : "");
   var q = typeof r[6] === "number" ? r[6] : null;
-  return { id: r[0], name: r[1], price: r[2], cat: r[3], brand: "Hot Wheels", qty: q, stock: !!r[4] && (q === null || q > 0), color: r[5], desc: d };
+  return { id: r[0], name: r[1], price: r[2], cat: r[3], brand: "Hot Wheels", qty: q, art: KK_ART[r[0]] ? "assets/img/products/" + r[0] + ".png" : "", stock: !!r[4] && (q === null || q > 0), color: r[5], desc: d };
 });

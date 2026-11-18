@@ -17,15 +17,19 @@
   K.car = function (c, label) {
     return '<svg viewBox="0 0 200 100" role="img" aria-label="' + K.esc(label || "Model car") + '"><path d="M10 70c0-9 4-13 12-15l30-7 22-19c3-3 6-4 10-4h50c6 0 10 2 14 6l18 17 22 5c8 2 12 6 12 14v9H10z" fill="' + c + '"/><path d="M70 33h36v15H56zM114 33h22l16 15h-38z" fill="#0B0B0D" opacity=".55"/><circle cx="55" cy="80" r="15" fill="#0B0B0D"/><circle cx="55" cy="80" r="6" fill="#8d8d93"/><circle cx="150" cy="80" r="15" fill="#0B0B0D"/><circle cx="150" cy="80" r="6" fill="#8d8d93"/></svg>';
   };
-  /* Product photo: uses p.images[0], or assets/img/<id>.jpg when config.photos is true; otherwise (or if the file is missing) the drawn car. */
-  K.imgSrc = function (p) { return p.images && p.images.length ? p.images[0] : (C.photos ? "assets/img/" + p.id + ".jpg" : ""); };
+  /* Product picture: p.images[0], else assets/img/<id>.jpg when config.photos is true, else the product's illustration (p.art).
+     If a photo file is missing, the illustration is used; if that is missing too, the drawn car. */
+  K.imgSrc = function (p) { return p.images && p.images.length ? p.images[0] : (C.photos ? "assets/img/" + p.id + ".jpg" : (p.art || "")); };
   K.img = function (p, alt, eager) {
-    var s = K.imgSrc(p);
-    return s ? '<img class="pimg" src="' + K.esc(s) + '" alt="' + K.esc(alt === undefined ? p.name : alt) + '" width="800" height="600"' + (eager ? "" : ' loading="lazy"') + ' decoding="async" data-c="' + K.esc(p.color) + '">' : K.car(p.color, alt === undefined ? p.name : "Model car");
+    var s = K.imgSrc(p), fb = !(p.images && p.images.length) && C.photos && p.art ? p.art : "";
+    var a = alt === undefined ? p.name + (s && s === p.art ? " (illustration)" : "") : alt;
+    return s ? '<img class="pimg" src="' + K.esc(s) + '" alt="' + K.esc(a) + '" width="800" height="600"' + (eager ? "" : ' loading="lazy"') + ' decoding="async" data-c="' + K.esc(p.color) + '"' + (fb ? ' data-fb="' + K.esc(fb) + '"' : "") + ">" : K.car(p.color, alt === undefined ? p.name : "Model car");
   };
   document.addEventListener("error", function (e) {
     var t = e.target;
-    if (t && t.classList && t.classList.contains("pimg")) t.outerHTML = K.car(t.getAttribute("data-c") || "#C9A45C");
+    if (!t || !t.classList || !t.classList.contains("pimg")) return;
+    var fb = t.getAttribute("data-fb");
+    if (fb) { t.removeAttribute("data-fb"); t.src = fb; } else t.outerHTML = K.car(t.getAttribute("data-c") || "#C9A45C");
   }, true);
   K.meta = function (title, desc) {
     document.title = title;

@@ -16,6 +16,8 @@ Add a number as the 7th value in a product row, for example `["camaro10","...",2
 - Stock is not reduced automatically when an order arrives. Update the number after you confirm each order.
 
 ## Product photos
+Until you add photos, the four in-stock products use drawn illustrations (`assets/img/products/<id>.png`) and the product page says so. Real photos, once you add them and set `photos: true`, replace the illustrations automatically. If a photo file is missing, the illustration is shown instead.
+
 1. Put photos in `assets/img/` named `<product id>.jpg` (for example `camaro10.jpg`). Extra photos: `camaro10-2.jpg`, `camaro10-3.jpg` (up to `-5`).
 2. Set `photos: true` in `config.js`.
 Use landscape 4:3 photos, about 1200 x 900 px. A missing photo falls back to the drawn car.
