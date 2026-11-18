@@ -1,6 +1,8 @@
 (function () {
   "use strict";
-  var C = window.KK_CONFIG, P = window.KK_PRODUCTS, K = (window.KK = { C: C, P: P, cats: window.KK_CATS, posts: window.KK_POSTS });
+  var C = window.KK_CONFIG, P = window.KK_PRODUCTS, K = (window.KK = { C: C, P: P, cats: window.KK_CATS });
+  K.posts = (window.KK_POSTS || []).slice().sort(function (a, b) { return b.date.localeCompare(a.date); });
+  C.maxQty = C.maxQty > 0 ? C.maxQty : 10;
   K.$ = function (s, r) { return (r || document).querySelector(s); };
   K.esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   K.money = function (n) { return C.currency + Number(n).toLocaleString("en-IN"); };
@@ -10,55 +12,122 @@
   K.qs = new URLSearchParams(window.location.search);
   K.pu = function (id) { return "product.html?id=" + encodeURIComponent(id); };
   K.cu = function (c) { return "category.html?c=" + encodeURIComponent(c); };
-  K.car = function (c) {
-    return '<svg viewBox="0 0 200 100" role="img" aria-label="Model car"><path d="M10 70c0-9 4-13 12-15l30-7 22-19c3-3 6-4 10-4h50c6 0 10 2 14 6l18 17 22 5c8 2 12 6 12 14v9H10z" fill="' + c + '"/><path d="M70 33h36v15H56zM114 33h22l16 15h-38z" fill="#0B0B0D" opacity=".55"/><circle cx="55" cy="80" r="15" fill="#0B0B0D"/><circle cx="55" cy="80" r="6" fill="#8d8d93"/><circle cx="150" cy="80" r="15" fill="#0B0B0D"/><circle cx="150" cy="80" r="6" fill="#8d8d93"/></svg>';
+  K.abs = function (p) { return C.siteUrl ? String(C.siteUrl).replace(/\/$/, "") + "/" + p : ""; };
+  K.date = function (d) { return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }); };
+  K.car = function (c, label) {
+    return '<svg viewBox="0 0 200 100" role="img" aria-label="' + K.esc(label || "Model car") + '"><path d="M10 70c0-9 4-13 12-15l30-7 22-19c3-3 6-4 10-4h50c6 0 10 2 14 6l18 17 22 5c8 2 12 6 12 14v9H10z" fill="' + c + '"/><path d="M70 33h36v15H56zM114 33h22l16 15h-38z" fill="#0B0B0D" opacity=".55"/><circle cx="55" cy="80" r="15" fill="#0B0B0D"/><circle cx="55" cy="80" r="6" fill="#8d8d93"/><circle cx="150" cy="80" r="15" fill="#0B0B0D"/><circle cx="150" cy="80" r="6" fill="#8d8d93"/></svg>';
   };
+  /* Product photo: uses p.images[0], or assets/img/<id>.jpg when config.photos is true; otherwise (or if the file is missing) the drawn car. */
+  K.imgSrc = function (p) { return p.images && p.images.length ? p.images[0] : (C.photos ? "assets/img/" + p.id + ".jpg" : ""); };
+  K.img = function (p, alt, eager) {
+    var s = K.imgSrc(p);
+    return s ? '<img class="pimg" src="' + K.esc(s) + '" alt="' + K.esc(alt === undefined ? p.name : alt) + '" width="800" height="600"' + (eager ? "" : ' loading="lazy"') + ' decoding="async" data-c="' + K.esc(p.color) + '">' : K.car(p.color, alt === undefined ? p.name : "Model car");
+  };
+  document.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains("pimg")) t.outerHTML = K.car(t.getAttribute("data-c") || "#C9A45C");
+  }, true);
+  K.meta = function (title, desc) {
+    document.title = title;
+    [['meta[name="description"]', desc], ['meta[property="og:title"]', title], ['meta[property="og:description"]', desc]].forEach(function (m) { var el = K.$(m[0]); if (el && m[1]) el.setAttribute("content", m[1]); });
+  };
+  K.ld = function (o) { try { var s = document.createElement("script"); s.type = "application/ld+json"; s.textContent = JSON.stringify(o); document.head.appendChild(s); } catch (e) {} };
+
+  /* ---- cart ---- */
   K.cart = K.get("kk_cart", {});
-  if (typeof K.cart !== "object" || K.cart === null) K.cart = {};
-  Object.keys(K.cart).forEach(function (id) { if (!K.byId(id) || !(K.cart[id] > 0)) delete K.cart[id]; });
+  if (typeof K.cart !== "object" || K.cart === null || Array.isArray(K.cart)) K.cart = {};
   K.count = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.cart[id]; }, 0); };
   K.subtotal = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.byId(id).price * K.cart[id]; }, 0); };
   K.badge = function () { var b = K.$("#cnt"); if (b) b.textContent = K.count(); };
   K.saveCart = function () { K.set("kk_cart", K.cart); K.badge(); document.dispatchEvent(new Event("kk:cart")); };
+  /* Remove unknown or sold-out products and cap quantities. Returns the names removed. */
+  K.fix = function () {
+    var out = [];
+    Object.keys(K.cart).forEach(function (id) {
+      var p = K.byId(id), q = Math.floor(Number(K.cart[id]));
+      if (!p || !p.stock || !(q > 0)) { out.push(p ? p.name : id); delete K.cart[id]; }
+      else K.cart[id] = Math.min(q, C.maxQty);
+    });
+    if (out.length) K.saveCart();
+    return out;
+  };
+  K.removed = K.fix();
+  /* Returns 1 added, -1 capped at the per-order limit, 0 not possible. */
+  K.add = function (id, d) {
+    var p = K.byId(id); if (!p || (d > 0 && !p.stock)) return 0;
+    var cur = K.cart[id] || 0, n = Math.max(0, Math.min(C.maxQty, cur + d));
+    if (n === cur) return d > 0 ? -1 : 0;
+    if (n === 0) delete K.cart[id]; else K.cart[id] = n;
+    K.saveCart(); return 1;
+  };
   K.toast = function (m) {
     var t = K.$("#toast"); if (!t) return;
     t.textContent = m; t.classList.add("on"); clearTimeout(K.toast.t);
-    K.toast.t = setTimeout(function () { t.classList.remove("on"); }, 2400);
-  };
-  K.add = function (id, d) {
-    var p = K.byId(id); if (!p || (d > 0 && !p.stock)) return false;
-    K.cart[id] = Math.min(99, (K.cart[id] || 0) + d);
-    if (K.cart[id] <= 0) delete K.cart[id];
-    K.saveCart(); return true;
+    K.toast.t = setTimeout(function () { t.classList.remove("on"); }, 2800);
   };
   K.wa = function (msg) {
     var n = String(C.whatsapp || "").replace(/\D/g, ""); if (!n) return false;
     window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(msg), "_blank", "noopener"); return true;
   };
   K.copy = function (t, ok) {
-    try { navigator.clipboard.writeText(t).then(function () { K.toast(ok); }, function () { K.toast("Could not copy"); }); } catch (e) { K.toast("Could not copy"); }
+    try { navigator.clipboard.writeText(t).then(function () { K.toast(ok); }, function () { K.toast("Could not copy. Please copy it manually."); }); } catch (e) { K.toast("Could not copy. Please copy it manually."); }
   };
+
+  /* ---- validation ---- */
+  K.STATES = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+  K.phoneNorm = function (s) { var m = /^(?:\+?91|0)?([6-9]\d{9})$/.exec(String(s).replace(/[\s-]/g, "")); return m ? "+91" + m[1] : null; };
+  K.rules = {
+    name: function (s) { return /^[\p{L}][\p{L} .'-]{1,59}$/u.test(s) ? "" : "Enter your full name (letters only)."; },
+    phone: function (s) { return K.phoneNorm(s) ? "" : "Enter a valid 10-digit Indian mobile number."; },
+    email: function (s) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s) && s.length <= 120 ? "" : "Enter a valid email address."; },
+    address: function (s) { return s.length >= 8 && s.length <= 200 ? "" : "Enter your full address (house, street, area)."; },
+    city: function (s) { return /^[\p{L}][\p{L} .'-]{1,49}$/u.test(s) ? "" : "Enter your city."; },
+    state: function (s) { return K.STATES.indexOf(s) > -1 ? "" : "Select your state."; },
+    pin: function (s) { return /^[1-9]\d{5}$/.test(s) ? "" : "Enter a valid 6-digit PIN code."; },
+    msg: function (s) { return s.length >= 10 && s.length <= 1000 ? "" : "Please write at least 10 characters."; }
+  };
+  K.field = function (label, name, attrs, tag, inner) {
+    var a = ' id="f-' + name + '" name="' + name + '" aria-describedby="e-' + name + '" ' + (attrs || "");
+    var c = tag === "textarea" ? "<textarea" + a + "></textarea>" : tag === "select" ? "<select" + a + ">" + inner + "</select>" : "<input" + a + ">";
+    return '<div class="fld"><label for="f-' + name + '">' + label + "</label>" + c + '<span class="err" id="e-' + name + '"></span></div>';
+  };
+  K.validate = function (f, names) {
+    var first = null;
+    names.forEach(function (n) {
+      var el = f.elements[n], m = K.rules[n](String(el.value).trim()), er = K.$("#e-" + n);
+      if (er) er.textContent = m;
+      el.setAttribute("aria-invalid", m ? "true" : "false"); el.classList.toggle("bad", !!m);
+      if (m && !first) first = el;
+    });
+    if (first && first.focus) first.focus();
+    return !first;
+  };
+
+  /* ---- shared UI ---- */
   K.card = function (p) {
-    return '<article class="card' + (p.stock ? "" : " out") + '"><a class="ph" href="' + K.pu(p.id) + '" aria-label="View ' + K.esc(p.name) + '"><span class="tag' + (p.stock ? "" : " out") + '">' + (p.stock ? K.esc(p.cat) : "Sold out") + "</span>" + K.car(p.color) + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><button class="btn" type="button" data-act="add" data-id="' + p.id + '"' + (p.stock ? "" : " disabled") + ">" + (p.stock ? "Add" : "Sold out") + "</button></div></div></article>";
+    return '<article class="card' + (p.stock ? "" : " out") + '"><a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? "" : " out") + '">' + (p.stock ? K.esc(p.cat) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><button class="btn sm" type="button" data-act="add" data-id="' + p.id + '" aria-label="' + (p.stock ? "Add " + K.esc(p.name) + " to cart" : K.esc(p.name) + " is sold out") + '"' + (p.stock ? "" : " disabled") + ">" + (p.stock ? "Add" : "Sold out") + "</button></div></div></article>";
   };
   K.chrome = function () {
     var pg = document.body.getAttribute("data-page"), esc = K.esc;
     var links = [["Home", "index.html", "home"], ["Collections", "collections.html", "collections"], ["Blog", "blog.html", "blog"], ["About", "about.html", "about"], ["Contact", "contact.html", "contact"]];
     var h = K.$("#hdr"), f = K.$("#ftr");
-    if (h) h.innerHTML = '<div class="bar">All-India delivery · 100% authentic · Prepaid orders</div><header class="hd" id="hd"><a class="logo d" href="index.html">Keepsake <b>Kart</b></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false">☰</button><nav class="nav" aria-label="Main">' +
+    if (h) h.innerHTML = '<div class="bar">' + esc(C.notice || "") + '</div><header class="hd" id="hd"><a class="logo d" href="index.html">Keepsake <b>Kart</b></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button><nav class="nav" id="nav" aria-label="Main">' +
       links.map(function (l) { return '<a href="' + l[1] + '"' + (l[2] === pg ? ' aria-current="page"' : "") + ">" + l[0] + "</a>"; }).join("") +
-      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search</label><input id="hq" name="q" type="search" placeholder="Search name or brand…" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="account.html">Account</a><a class="cartbtn" href="cart.html">Cart <span id="cnt">0</span></a></header>';
-    if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d">Keepsake <b>Kart</b></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><div class="fl"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="cart.html">Cart</a></div><div class="fl"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a><a href="account.html">My account</a></div><div class="fl"><b>Reach us</b>' +
-      (C.whatsapp ? "<span>WhatsApp: +" + esc(String(C.whatsapp).replace(/\D/g, "")) + "</span>" : "") + (C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (C.instagram ? '<a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">All items are collectibles and all sales are final. © 2026 Keepsake Kart.</p></footer>';
+      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>Account</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
+    if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d">Keepsake <b>Kart</b></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><nav class="fl" aria-label="Shop"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="cart.html">Cart</a></nav><nav class="fl" aria-label="Store"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="policies.html">Shipping, payment &amp; returns</a><a href="account.html">My account</a></nav><div class="fl"><b>Reach us</b>' +
+      (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">WhatsApp</a>' : "") + (C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (C.instagram ? '<a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
     var mn = K.$("#mn");
-    if (mn) mn.addEventListener("click", function () { var o = K.$("#hd").classList.toggle("open"); mn.setAttribute("aria-expanded", String(o)); });
+    if (mn) {
+      mn.addEventListener("click", function () { var o = K.$("#hd").classList.toggle("open"); mn.setAttribute("aria-expanded", String(o)); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && K.$("#hd").classList.contains("open")) { K.$("#hd").classList.remove("open"); mn.setAttribute("aria-expanded", "false"); mn.focus(); } });
+    }
     K.badge();
   };
   document.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("[data-act]") : null; if (!b) return;
-    var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
-    if (a === "add") { if (K.add(id, 1)) K.toast("Added to cart"); }
-    else if (a === "inc") K.add(id, 1); else if (a === "dec") K.add(id, -1);
+    var a = b.getAttribute("data-act"), id = b.getAttribute("data-id"), r;
+    if (a === "add" || a === "inc") { r = K.add(id, 1); if (r === 1 && a === "add") K.toast("Added to cart"); if (r === -1) K.toast("Maximum " + C.maxQty + " per order for this item"); }
+    else if (a === "dec") K.add(id, -1);
     else if (a === "rm") { delete K.cart[id]; K.saveCart(); }
   });
   K.chrome();
