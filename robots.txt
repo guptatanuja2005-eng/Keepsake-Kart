@@ -3,4 +3,5 @@ Allow: /
 Disallow: /cart.html
 Disallow: /checkout.html
 Disallow: /account.html
+Disallow: /wishlist.html
 Sitemap: https://guptatanuja2005-eng.github.io/Keepsake-Kart/sitemap.xml

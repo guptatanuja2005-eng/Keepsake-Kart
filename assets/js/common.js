@@ -38,15 +38,17 @@
   if (typeof K.cart !== "object" || K.cart === null || Array.isArray(K.cart)) K.cart = {};
   K.count = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.cart[id]; }, 0); };
   K.subtotal = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.byId(id).price * K.cart[id]; }, 0); };
-  K.badge = function () { var b = K.$("#cnt"); if (b) b.textContent = K.count(); };
+  K.badge = function () { var b = K.$("#cnt"), w = K.$("#wcnt"); if (b) b.textContent = K.count(); if (w && K.wl) w.textContent = K.wl.length; };
   K.saveCart = function () { K.set("kk_cart", K.cart); K.badge(); document.dispatchEvent(new Event("kk:cart")); };
+  K.hasQty = function (p) { return typeof p.qty === "number"; };
+  K.avail = function (p) { return K.hasQty(p) ? Math.max(0, Math.min(C.maxQty, p.qty)) : C.maxQty; };
   /* Remove unknown or sold-out products and cap quantities. Returns the names removed. */
   K.fix = function () {
     var out = [];
     Object.keys(K.cart).forEach(function (id) {
       var p = K.byId(id), q = Math.floor(Number(K.cart[id]));
       if (!p || !p.stock || !(q > 0)) { out.push(p ? p.name : id); delete K.cart[id]; }
-      else K.cart[id] = Math.min(q, C.maxQty);
+      else K.cart[id] = Math.min(q, K.avail(p));
     });
     if (out.length) K.saveCart();
     return out;
@@ -55,7 +57,7 @@
   /* Returns 1 added, -1 capped at the per-order limit, 0 not possible. */
   K.add = function (id, d) {
     var p = K.byId(id); if (!p || (d > 0 && !p.stock)) return 0;
-    var cur = K.cart[id] || 0, n = Math.max(0, Math.min(C.maxQty, cur + d));
+    var cur = K.cart[id] || 0, n = Math.max(0, Math.min(K.avail(p), cur + d));
     if (n === cur) return d > 0 ? -1 : 0;
     if (n === 0) delete K.cart[id]; else K.cart[id] = n;
     K.saveCart(); return 1;
@@ -103,9 +105,68 @@
     return !first;
   };
 
+  /* ---- stock, wishlist, recently viewed, recommendations, coupons ---- */
+  C.lowStock = C.lowStock > 0 ? C.lowStock : 3;
+  K.low = function (p) { return !!(p.stock && K.hasQty(p) && p.qty <= C.lowStock); };
+  K.wl = K.get("kk_wish", []);
+  if (!Array.isArray(K.wl)) K.wl = [];
+  K.wl = K.wl.filter(function (id) { return !!K.byId(id); });
+  K.rv = K.get("kk_rv", []);
+  if (!Array.isArray(K.rv)) K.rv = [];
+  K.seen = function (id) { K.rv = [id].concat(K.rv.filter(function (x) { return x !== id; })).slice(0, 10); K.set("kk_rv", K.rv); };
+  K.recent = function (ex, n) { return K.rv.filter(function (id) { return id !== ex; }).map(function (id) { return K.byId(id); }).filter(Boolean).slice(0, n || 4); };
+  K.reviewsFor = function (id) { return (window.KK_REVIEWS || []).filter(function (r) { return r.product === id && r.rating >= 1 && r.rating <= 5; }); };
+  K.stars = function (n) { n = Math.round(n); return '<span class="stars" role="img" aria-label="' + n + ' out of 5 stars">' + "&#9733;".repeat(n) + "&#9734;".repeat(5 - n) + "</span>"; };
+  K.reco = function (base, n, ex) {
+    var cats = {}, brands = {}, avg = 0;
+    base.forEach(function (b) { cats[b.cat] = 1; brands[b.brand] = 1; avg += b.price; });
+    avg = base.length ? avg / base.length : 0; ex = ex || [];
+    return P.filter(function (p) { return p.stock && ex.indexOf(p.id) < 0; }).map(function (p, i) {
+      return { p: p, i: i, s: (cats[p.cat] ? 3 : 0) + (brands[p.brand] ? 1 : 0) + (avg && Math.abs(p.price - avg) / avg <= 0.4 ? 2 : 0) };
+    }).sort(function (a, b) { return b.s - a.s || a.i - b.i; }).slice(0, n).map(function (x) { return x.p; });
+  };
+  K.toggleWish = function (id) {
+    var p = K.byId(id); if (!p) return;
+    var i = K.wl.indexOf(id); if (i > -1) K.wl.splice(i, 1); else K.wl.unshift(id);
+    K.set("kk_wish", K.wl);
+    var on = i < 0, bs = document.querySelectorAll('[data-act="wish"]');
+    Array.prototype.forEach.call(bs, function (b) {
+      if (b.getAttribute("data-id") !== id) return;
+      var t = b.getAttribute("data-t");
+      b.setAttribute("aria-pressed", String(on));
+      b.setAttribute("aria-label", (on ? "Remove " : "Save ") + p.name + (on ? " from" : " to") + " wishlist");
+      b.innerHTML = (on ? "&#9829;" : "&#9825;") + (t ? " " + (on ? "Saved" : "Add to wishlist") : "");
+    });
+    K.badge(); K.toast(on ? "Saved to wishlist" : "Removed from wishlist");
+    document.dispatchEvent(new Event("kk:wish"));
+  };
+  K.wishBtn = function (p, txt) {
+    var on = K.wl.indexOf(p.id) > -1;
+    return '<button class="wish' + (txt ? " txt" : "") + '" type="button" data-act="wish" data-id="' + p.id + '"' + (txt ? ' data-t="1"' : "") + ' aria-pressed="' + on + '" aria-label="' + (on ? "Remove " : "Save ") + K.esc(p.name) + (on ? " from" : " to") + ' wishlist">' + (on ? "&#9829;" : "&#9825;") + (txt ? " " + (on ? "Saved" : "Add to wishlist") : "") + "</button>";
+  };
+  K.coupons = function () { return Array.isArray(C.coupons) ? C.coupons : []; };
+  /* Checks a coupon code against the cart subtotal. Returns {code, discount} or {err}. */
+  K.couponCheck = function (code, sub) {
+    code = String(code || "").trim().toUpperCase();
+    var c = K.coupons().filter(function (x) { return String(x.code).toUpperCase() === code; })[0];
+    if (!c || c.active === false) return { err: "This code is not valid." };
+    if (c.expires && new Date() > new Date(c.expires + "T23:59:59")) return { err: "This code has expired." };
+    if (c.min && sub < c.min) return { err: "Add " + K.money(c.min - sub) + " more to use this code." };
+    var d = c.type === "flat" ? Number(c.value) : Math.round(sub * Number(c.value) / 100);
+    if (c.max) d = Math.min(d, c.max);
+    d = Math.max(0, Math.min(d, sub));
+    return { code: code, discount: d };
+  };
+  K.couponNow = function () {
+    var code = K.get("kk_coupon", ""); if (!code) return null;
+    var r = K.couponCheck(code, K.subtotal());
+    return r.err ? { code: code, err: r.err, discount: 0 } : r;
+  };
+
   /* ---- shared UI ---- */
   K.card = function (p) {
-    return '<article class="card' + (p.stock ? "" : " out") + '"><a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? "" : " out") + '">' + (p.stock ? K.esc(p.cat) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><button class="btn sm" type="button" data-act="add" data-id="' + p.id + '" aria-label="' + (p.stock ? "Add " + K.esc(p.name) + " to cart" : K.esc(p.name) + " is sold out") + '"' + (p.stock ? "" : " disabled") + ">" + (p.stock ? "Add" : "Sold out") + "</button></div></div></article>";
+    var low = K.low(p);
+    return '<article class="card' + (p.stock ? "" : " out") + '">' + K.wishBtn(p) + '<a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? (low ? " low" : "") : " out") + '">' + (p.stock ? (low ? "Only " + p.qty + " left" : K.esc(p.cat)) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><button class="btn sm" type="button" data-act="add" data-id="' + p.id + '" aria-label="' + (p.stock ? "Add " + K.esc(p.name) + " to cart" : K.esc(p.name) + " is sold out") + '"' + (p.stock ? "" : " disabled") + ">" + (p.stock ? "Add" : "Sold out") + "</button></div></div></article>";
   };
   K.chrome = function () {
     var pg = document.body.getAttribute("data-page"), esc = K.esc;
@@ -113,7 +174,7 @@
     var h = K.$("#hdr"), f = K.$("#ftr");
     if (h) h.innerHTML = '<div class="bar">' + esc(C.notice || "") + '</div><header class="hd" id="hd"><a class="logo d" href="index.html">Keepsake <b>Kart</b></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button><nav class="nav" id="nav" aria-label="Main">' +
       links.map(function (l) { return '<a href="' + l[1] + '"' + (l[2] === pg ? ' aria-current="page"' : "") + ">" + l[0] + "</a>"; }).join("") +
-      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>Account</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
+      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>Account</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
     if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d">Keepsake <b>Kart</b></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><nav class="fl" aria-label="Shop"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="cart.html">Cart</a></nav><nav class="fl" aria-label="Store"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="policies.html">Shipping, payment &amp; returns</a><a href="account.html">My account</a></nav><div class="fl"><b>Reach us</b>' +
       (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">WhatsApp</a>' : "") + (C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (C.instagram ? '<a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
     var mn = K.$("#mn");
@@ -126,9 +187,11 @@
   document.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("[data-act]") : null; if (!b) return;
     var a = b.getAttribute("data-act"), id = b.getAttribute("data-id"), r;
-    if (a === "add" || a === "inc") { r = K.add(id, 1); if (r === 1 && a === "add") K.toast("Added to cart"); if (r === -1) K.toast("Maximum " + C.maxQty + " per order for this item"); }
+    if (a === "add" || a === "inc") { r = K.add(id, 1); if (r === 1 && a === "add") K.toast("Added to cart"); if (r === -1) { var pp = K.byId(id); K.toast(pp && K.avail(pp) < C.maxQty ? "Only " + K.avail(pp) + " available" : "Maximum " + C.maxQty + " per order for this item"); } }
     else if (a === "dec") K.add(id, -1);
     else if (a === "rm") { delete K.cart[id]; K.saveCart(); }
+    else if (a === "rmc") { K.set("kk_coupon", ""); document.dispatchEvent(new Event("kk:cart")); }
+    else if (a === "wish") K.toggleWish(id);
   });
   K.chrome();
 })();

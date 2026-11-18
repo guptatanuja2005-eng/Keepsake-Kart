@@ -9,6 +9,12 @@ window.KK_CONFIG = {
   photos: false,
   /* Most units of one product per order. */
   maxQty: 10,
+  /* Show an "Only N left" label when a product's qty is this number or lower. */
+  lowStock: 3,
+  /* Coupon codes (leave empty to hide the coupon box). Example:
+     { code: "WELCOME10", type: "percent", value: 10, min: 500, max: 200, expires: "2026-12-31", desc: "10% off" }
+     type is "percent" or "flat". Coupons are checked in the browser, so use them for public promo codes and re-check each order when you confirm it on WhatsApp. */
+  coupons: [],
   /* Text in the top bar. */
   notice: "Authentic die-cast collectibles",
   /* Four short selling points on the home page. */
