@@ -43,7 +43,7 @@
   K.count = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.cart[id]; }, 0); };
   K.subtotal = function () { return Object.keys(K.cart).reduce(function (n, id) { return n + K.byId(id).price * K.cart[id]; }, 0); };
   K.badge = function () { var b = K.$("#cnt"), w = K.$("#wcnt"); if (b) b.textContent = K.count(); if (w && K.wl) w.textContent = K.wl.length; };
-  K.saveCart = function () { K.set("kk_cart", K.cart); K.badge(); document.dispatchEvent(new Event("kk:cart")); };
+  K.saveCart = function () { K.set("kk_cart", K.cart); K.badge(); if (K.sync) K.sync(); document.dispatchEvent(new Event("kk:cart")); };
   K.isPre = function (p) { return !!p && p.cat === "Pre-Orders"; };
   K.hasQty = function (p) { return typeof p.qty === "number"; };
   K.avail = function (p) { return K.hasQty(p) ? Math.max(0, Math.min(C.maxQty, p.qty)) : C.maxQty; };
@@ -65,7 +65,7 @@
     var cur = K.cart[id] || 0, n = Math.max(0, Math.min(K.avail(p), cur + d));
     if (n === cur) return d > 0 ? -1 : 0;
     if (n === 0) delete K.cart[id]; else K.cart[id] = n;
-    K.saveCart(); return 1;
+    K.saveCart(); if (n > cur && K.bump) K.bump("+" + (n - cur)); return 1;
   };
   K.toast = function (m) {
     var t = K.$("#toast"); if (!t) return;
@@ -169,17 +169,44 @@
   };
 
   /* ---- shared UI ---- */
+  K.cardAct = function (p) {
+    var q = K.cart[p.id] || 0, n = K.esc(p.name);
+    if (!p.stock) return '<button class="btn sm" type="button" disabled aria-label="' + n + ' is sold out">Sold out</button>';
+    if (q > 0) return '<span class="qty cq"><button type="button" data-act="dec" data-id="' + p.id + '" aria-label="Remove one ' + n + '">&minus;</button><span aria-live="polite" aria-label="' + q + ' in cart">' + q + '</span><button type="button" data-act="inc" data-id="' + p.id + '" aria-label="Add one more ' + n + '"' + (q >= K.avail(p) ? ' disabled title="Maximum ' + K.avail(p) + ' per order"' : "") + ">+</button></span>";
+    return '<button class="btn sm" type="button" data-act="add" data-id="' + p.id + '" aria-label="Add ' + n + ' to cart">' + (K.isPre(p) ? "Pre-order" : "Add") + "</button>";
+  };
+  /* Refresh every product card's Add / quantity control after the cart changes. */
+  K.sync = function () {
+    var ae = document.activeElement, keep = ae && ae.closest ? ae.closest(".act[data-id]") : null;
+    var kid = keep ? keep.getAttribute("data-id") : null, which = ae && ae.getAttribute ? ae.getAttribute("data-act") : null;
+    Array.prototype.forEach.call(document.querySelectorAll(".act[data-id]"), function (el) { var p = K.byId(el.getAttribute("data-id")); if (p) el.innerHTML = K.cardAct(p); });
+    if (kid) {
+      var want = which === "add" ? "inc" : which, sel = '.act[data-id="' + kid + '"] ';
+      var nb = document.querySelector(sel + '[data-act="' + want + '"]:not([disabled])') || document.querySelector(sel + "button:not([disabled])");
+      if (nb && nb.focus) nb.focus();
+    }
+  };
+  /* Small "+1" / "+2" pop next to the cart button when something is added. */
+  K.bump = function (t) {
+    try {
+      var b = K.$("#cnt"); if (!b || !b.parentNode) return;
+      var sp = document.createElement("span"); sp.className = "plus"; sp.textContent = t; b.parentNode.appendChild(sp);
+      setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 1200);
+    } catch (e) {}
+  };
+  K.refreshAcct = function () { var a = K.$("a.acct"), u = K.get("kk_user", null); if (a) a.textContent = u && u.name ? "Hi, " + String(u.name).split(" ")[0] : "Create account"; };
   K.card = function (p) {
     var low = K.low(p);
-    return '<article class="card' + (p.stock ? "" : " out") + '">' + K.wishBtn(p) + '<a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? (low ? " low" : "") : " out") + '">' + (p.stock ? (low ? "Only " + p.qty + " left" : K.esc(p.cat)) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><button class="btn sm" type="button" data-act="add" data-id="' + p.id + '" aria-label="' + (p.stock ? "Add " + K.esc(p.name) + " to cart" : K.esc(p.name) + " is sold out") + '"' + (p.stock ? "" : " disabled") + ">" + (p.stock ? (K.isPre(p) ? "Pre-order" : "Add") : "Sold out") + "</button></div></div></article>";
+    return '<article class="card' + (p.stock ? "" : " out") + '">' + K.wishBtn(p) + '<a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? (low ? " low" : "") : " out") + '">' + (p.stock ? (low ? "Only " + p.qty + " left" : K.esc(p.cat)) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><span class="act" data-id="' + p.id + '">' + K.cardAct(p) + "</span></div></div></article>";
   };
   K.chrome = function () {
     var pg = document.body.getAttribute("data-page"), esc = K.esc;
     var links = [["Home", "index.html", "home"], ["Collections", "collections.html", "collections"], ["Blog", "blog.html", "blog"], ["About", "about.html", "about"], ["Contact", "contact.html", "contact"]];
-    var h = K.$("#hdr"), f = K.$("#ftr");
+    var h = K.$("#hdr"), f = K.$("#ftr"), uu = K.get("kk_user", null);
+    var acct = uu && uu.name ? "Hi, " + esc(String(uu.name).split(" ")[0]) : "Create account";
     if (h) h.innerHTML = '<div class="bar">' + esc(C.notice || "") + '</div><header class="hd" id="hd"><a class="logo d" href="index.html">Keepsake <b>Kart</b></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button><nav class="nav" id="nav" aria-label="Main">' +
       links.map(function (l) { return '<a href="' + l[1] + '"' + (l[2] === pg ? ' aria-current="page"' : "") + ">" + l[0] + "</a>"; }).join("") +
-      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>Account</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
+      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn acct" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>' + acct + '</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
     if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d">Keepsake <b>Kart</b></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><nav class="fl" aria-label="Shop"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="category.html?c=Pre-Orders">Pre-orders</a><a href="cart.html">Cart</a></nav><nav class="fl" aria-label="Store"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="policies.html">Shipping, payment &amp; returns</a><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of use</a><a href="account.html">My account</a></nav><div class="fl"><b>Reach us</b>' +
       (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">WhatsApp</a>' : "") + (C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (C.instagram ? '<a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
     var mn = K.$("#mn");

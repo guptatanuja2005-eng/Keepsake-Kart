@@ -142,3 +142,10 @@ input.bad,textarea.bad,select.bad{border-color:var(--bad)}
  .mbar .btn{flex:1;max-width:240px}.pd~.wrap:last-of-type{padding-bottom:96px}.toast{bottom:84px}
 }
 @media(max-width:600px){.wish{width:40px;height:40px;top:6px;right:6px}.brands a{font-size:18px}.dl{grid-template-columns:1fr;gap:2px 0}.dl dd{margin-bottom:10px}}
+/* ---- card quantity stepper and +1 pop ---- */
+.act{display:inline-flex}.qty.cq{margin:0;gap:2px}.qty.cq button{width:38px;height:38px}.qty.cq span{min-width:30px;font-weight:600;color:var(--gold)}
+.cartbtn{position:relative}
+.plus{position:absolute;top:-12px;right:-6px;padding:2px 8px;background:var(--gold);color:#0B0B0D;font:700 12px Inter,sans-serif;pointer-events:none;animation:rise 1.2s ease-out forwards}
+@keyframes rise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+@media(max-width:600px){.row .act{width:100%}.row .act .btn{width:100%}.qty.cq{width:100%;justify-content:space-between}.qty.cq button{width:44px;height:40px}}
+@media(prefers-reduced-motion:reduce){.plus{animation:none;opacity:1}}

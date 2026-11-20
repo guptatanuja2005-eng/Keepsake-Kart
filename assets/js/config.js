@@ -7,8 +7,8 @@ window.KK_CONFIG = {
   siteUrl: "",
   /* Set to true after you add product photos to assets/img/ (named <product id>.jpg). */
   photos: false,
-  /* Most units of one product per order. */
-  maxQty: 10,
+  /* Most units of EACH product a customer can order. */
+  maxQty: 2,
   /* Show an "Only N left" label when a product's qty is this number or lower. */
   lowStock: 3,
   /* Coupon codes (leave empty to hide the coupon box). Example:
@@ -24,15 +24,13 @@ window.KK_CONFIG = {
     { t: "Order on WhatsApp", d: "We confirm stock and payment with you personally." },
     { t: "Requests welcome", d: "Hunting a casting? Message us and we will try to source it." }
   ],
-  /* Shipping options and prices are PLACEHOLDERS: replace with your real charges. */
+  /* Shipping charge (flat Rs. 150). Add more options here if you need them. */
   shipping: [
-    { id: "std", label: "Standard shipping", price: 60 },
-    { id: "exp", label: "Express shipping", price: 120 }
+    { id: "std", label: "Shipping", price: 150 }
   ],
   /* Payment options shown at checkout. */
   payments: [
-    { id: "upi", label: "UPI (details shared on WhatsApp)" },
-    { id: "bank", label: "Bank transfer / Net banking" }
+    { id: "upi", label: "UPI (details shared on WhatsApp)" }
   ],
   checkoutNote: "We confirm stock and share payment details on WhatsApp before dispatch.",
   /* Policy text for the Shipping, Payment and Returns page. Separate paragraphs with a blank line (\n\n). */

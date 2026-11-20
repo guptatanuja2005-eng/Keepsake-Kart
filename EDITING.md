@@ -4,7 +4,7 @@ All store content lives in `assets/js/`. No build step: edit, save, refresh.
 
 | File | What to change |
 |---|---|
-| `config.js` | WhatsApp, email, Instagram, shipping and payment options, policies, coupons, order limits, low-stock level, `photos` switch |
+| `config.js` | WhatsApp, email, Instagram, shipping charge (now Rs. 150) and payment option (UPI), policies, coupons, `maxQty` (most of each product per order, now 2), low-stock level, `photos` switch |
 | `products.js` | Products: id, name, price, category, in stock (1/0), colour, and an optional 7th number = units in stock |
 | `reviews.js` | Customer reviews you have approved |
 | `blog.js` | Blog posts |
