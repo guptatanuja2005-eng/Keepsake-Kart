@@ -149,3 +149,6 @@ input.bad,textarea.bad,select.bad{border-color:var(--bad)}
 @keyframes rise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
 @media(max-width:600px){.row .act{width:100%}.row .act .btn{width:100%}.qty.cq{width:100%;justify-content:space-between}.qty.cq button{width:44px;height:40px}}
 @media(prefers-reduced-motion:reduce){.plus{animation:none;opacity:1}}
+/* ---- product pictures sit on white, like studio shots ---- */
+.ph,.th,.gal,.thb{background:#fff}
+.card.out .ph{opacity:.55}

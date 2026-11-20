@@ -22,7 +22,7 @@
   K.imgSrc = function (p) { return p.images && p.images.length ? p.images[0] : (C.photos ? "assets/img/" + p.id + ".jpg" : (p.art || "")); };
   K.img = function (p, alt, eager) {
     var s = K.imgSrc(p), fb = !(p.images && p.images.length) && C.photos && p.art ? p.art : "";
-    var a = alt === undefined ? p.name + (s && s === p.art ? " (illustration)" : "") : alt;
+    var a = alt === undefined ? p.name + (s && s === p.art ? " (illustrative image)" : "") : alt;
     return s ? '<img class="pimg" src="' + K.esc(s) + '" alt="' + K.esc(a) + '" width="800" height="600"' + (eager ? "" : ' loading="lazy"') + ' decoding="async" data-c="' + K.esc(p.color) + '"' + (fb ? ' data-fb="' + K.esc(fb) + '"' : "") + ">" : K.car(p.color, alt === undefined ? p.name : "Model car");
   };
   document.addEventListener("error", function (e) {
