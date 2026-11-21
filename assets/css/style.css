@@ -162,3 +162,10 @@ input.bad,textarea.bad,select.bad{border-color:var(--bad)}
 .catban-t{position:absolute;z-index:1;left:0;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;padding:0 5vw;max-width:min(680px,100%)}
 .catban-t h1{margin:12px 0 0;font-size:clamp(36px,6vw,72px);line-height:1}.catban-t .lead{margin:10px 0 0}.catban-t .eyebrow a{text-decoration:underline}
 .soon.box{max-width:720px;display:grid;gap:12px}.soon h2{margin:0;font-size:clamp(30px,4vw,44px)}.soon p{color:var(--mu);margin:0}
+/* ---- collection tiles with pictures ---- */
+.col.cat{padding:0;gap:0;min-height:0;background:var(--s1);overflow:hidden}
+.cpic{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;overflow:hidden;background:#0B0B0D}
+.cpic.photo{background:#fff}.cpic img{width:100%;height:100%;object-fit:cover;display:block}.cpic svg{width:70%;height:auto}
+.cpic .tag{top:12px;left:12px;z-index:1}
+.cbody{display:flex;flex-direction:column;gap:6px;padding:18px 20px 22px}
+.col.cat .ct{order:0}.col.cat .n{margin-top:0;font-size:30px}.col.cat .go{top:auto;bottom:20px;right:20px}

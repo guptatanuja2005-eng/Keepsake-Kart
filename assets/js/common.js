@@ -2,7 +2,13 @@
   "use strict";
   var C = window.KK_CONFIG, P = window.KK_PRODUCTS, K = (window.KK = { C: C, P: P, cats: window.KK_CATS });
   K.posts = (window.KK_POSTS || []).slice().sort(function (a, b) { return b.date.localeCompare(a.date); });
+  /* Do not let other sites show this store inside a frame (clickjacking protection). */
+  try { if (window.top !== window.self) { document.documentElement.innerHTML = ""; window.top.location = window.self.location; } } catch (e) { try { document.documentElement.innerHTML = ""; } catch (e2) {} }
   C.maxQty = C.maxQty > 0 ? C.maxQty : 10;
+  K.brands = window.KK_BRANDS && window.KK_BRANDS.length ? window.KK_BRANDS.slice() : P.reduce(function (a, p) { if (a.indexOf(p.brand) < 0) a.push(p.brand); return a; }, []);
+  /* Only allow https links and plain email addresses from the settings file. */
+  K.https = function (u) { u = String(u || "").trim(); return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : ""; };
+  K.okEmail = function (e) { return /^[^\s@"'<>]+@[^\s@"'<>]+\.[^\s@"'<>]{2,}$/.test(String(e || "")); };
   K.$ = function (s, r) { return (r || document).querySelector(s); };
   K.esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   K.money = function (n) { return C.currency + Number(n).toLocaleString("en-IN"); };
@@ -74,7 +80,7 @@
   };
   K.wa = function (msg) {
     var n = String(C.whatsapp || "").replace(/\D/g, ""); if (!n) return false;
-    window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(msg), "_blank", "noopener"); return true;
+    window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(msg), "_blank", "noopener,noreferrer"); return true;
   };
   K.copy = function (t, ok) {
     try { navigator.clipboard.writeText(t).then(function () { K.toast(ok); }, function () { K.toast("Could not copy. Please copy it manually."); }); } catch (e) { K.toast("Could not copy. Please copy it manually."); }
@@ -203,12 +209,13 @@
     var pg = document.body.getAttribute("data-page"), esc = K.esc;
     var links = [["Home", "index.html", "home"], ["Collections", "collections.html", "collections"], ["Blog", "blog.html", "blog"], ["About", "about.html", "about"], ["Contact", "contact.html", "contact"]];
     var h = K.$("#hdr"), f = K.$("#ftr"), uu = K.get("kk_user", null);
+    var sug = K.brands.concat(K.cats.map(function (c) { return c.name; }), P.map(function (p) { return p.name; })).filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (x) { return '<option value="' + esc(x) + '">'; }).join("");
     var acct = uu && uu.name ? "Hi, " + esc(String(uu.name).split(" ")[0]) : "Create account";
     if (h) h.innerHTML = '<div class="bar">' + esc(C.notice || "") + '</div><header class="hd" id="hd"><a class="logo d" href="index.html"><img class="lm" src="assets/img/logo.svg" alt="" width="34" height="34"><span>Keepsake <b>Kart</b></span></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button><nav class="nav" id="nav" aria-label="Main">' +
       links.map(function (l) { return '<a href="' + l[1] + '"' + (l[2] === pg ? ' aria-current="page"' : "") + ">" + l[0] + "</a>"; }).join("") +
-      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '"></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn acct" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>' + acct + '</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
+      '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '" list="sg"><datalist id="sg">' + sug + '</datalist></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn acct" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>' + acct + '</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
     if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d"><img class="lm" src="assets/img/logo.svg" alt="" width="34" height="34"><span>Keepsake <b>Kart</b></span></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><nav class="fl" aria-label="Shop"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="category.html?c=Pre-Orders">Pre-orders</a><a href="cart.html">Cart</a></nav><nav class="fl" aria-label="Store"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="policies.html">Shipping, payment &amp; returns</a><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of use</a><a href="account.html">My account</a></nav><div class="fl"><b>Reach us</b>' +
-      (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">WhatsApp</a>' : "") + (C.email ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (C.instagram ? '<a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
+      (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener noreferrer">WhatsApp</a>' : "") + (K.okEmail(C.email) ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (K.https(C.instagram) ? '<a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
     var mn = K.$("#mn");
     if (mn) {
       mn.addEventListener("click", function () { var o = K.$("#hd").classList.toggle("open"); mn.setAttribute("aria-expanded", String(o)); });

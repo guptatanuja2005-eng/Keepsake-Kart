@@ -50,3 +50,9 @@ See `backend/README.md`. The database design is a draft and is not connected to 
 
 ## Coming Soon
 A collection with no products shows "Coming soon" on the Collections page and home page, and its page offers a "Notify me" button that opens the contact form with a message filled in. Add a product with that category in `products.js` and it becomes a normal collection automatically.
+
+## Search and brands
+Search matches product names, brands and collections, ignoring capital letters, spaces and punctuation ("hotwheels" finds Hot Wheels). Brands without products still appear, with a Coming soon tile. The brand strip and search suggestions use the `KK_BRANDS` list in `products.js`.
+
+## Security
+See `SECURITY.md`. The Content Security Policy in each page allows scripts only from this site. If you ever add a new outside service (analytics, chat widget, fonts), tell me first so the policy can be updated, otherwise the browser will block it.

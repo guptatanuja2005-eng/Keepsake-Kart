@@ -7,6 +7,11 @@
   function none(t) { return head("Oops", t) + '<section class="wrap"><a class="btn solid" href="index.html">Back to home</a></section>'; }
   function hasPre() { return Object.keys(K.cart).some(function (id) { return K.isPre(K.byId(id)); }); }
   function preNote() { return hasPre() ? '<p class="fine">Your order includes pre-order items. They ship when stock arrives, and we will confirm timing with you on WhatsApp.</p>' : ""; }
+  function norm(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+  function match(text, q) {
+    var t = norm(text), ts = t.replace(/ /g, ""), ws = norm(q).split(" ").filter(Boolean);
+    return ws.length > 0 && ws.every(function (w) { return t.indexOf(w) > -1 || ts.indexOf(w) > -1; });
+  }
   function catImg(c, tile) { return "assets/img/banners/" + c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + (tile ? "-tile" : "") + ".jpg"; }
   function hasItems(c) { return P.some(function (p) { return p.cat === c.name; }); }
   function bannerHead(c) { return '<div class="catban"><img src="' + catImg(c) + '" alt="" width="1200" height="375"><div class="catban-t"><p class="eyebrow"><a href="collections.html">Collections</a> / ' + esc(c.name) + '</p><h1 class="d">' + esc(c.name) + '</h1><p class="lead">' + esc(c.d) + "</p></div></div>"; }
@@ -16,7 +21,7 @@
   }
   function rowSection(t, l) { return l.length ? '<section class="wrap"><h2 class="d sh">' + t + "</h2>" + grid(l) + "</section>" : ""; }
   function brandStrip() {
-    var b = []; P.forEach(function (p) { if (b.indexOf(p.brand) < 0) b.push(p.brand); });
+    var b = K.brands;
     return b.length ? '<nav class="brands" aria-label="Brands"><span>Brands</span>' + b.map(function (x) { return '<a href="search.html?q=' + encodeURIComponent(x) + '">' + esc(x) + "</a>"; }).join("") + "</nav>" : "";
   }
   function inStockFirst(l) { return l.slice().sort(function (a, b) { return Number(b.stock) - Number(a.stock); }); }
@@ -46,8 +51,10 @@
     chips(); draw();
   }
   function catTile(c) {
-    var n = P.filter(function (p) { return p.cat === c.name; }).length;
-    return '<a class="col cat" style="background-image:linear-gradient(0deg,rgba(11,11,13,.92),rgba(11,11,13,.15) 62%),url(' + catImg(c, 1) + ')" href="' + K.cu(c.name) + '"><span class="ct">' + (n ? n + (n === 1 ? " item" : " items") : "Coming soon") + '</span><span class="n d">' + esc(c.name) + '</span><span class="s">' + esc(c.d) + '</span><span class="go" aria-hidden="true">&rarr;</span></a>';
+    var items = P.filter(function (p) { return p.cat === c.name; }), n = items.length;
+    var lead = items.filter(function (p) { return p.stock; })[0] || items[0];
+    var pic = lead ? K.img(lead, "") : '<img src="' + catImg(c, 1) + '" alt="" width="600" height="450" loading="lazy">';
+    return '<a class="col cat' + (n ? "" : " soon") + '" href="' + K.cu(c.name) + '"><span class="cpic' + (n ? " photo" : "") + '">' + pic + (n ? "" : '<span class="tag">Coming soon</span>') + '</span><span class="cbody"><span class="ct">' + (n ? n + (n === 1 ? " item" : " items") : "Coming soon") + '</span><span class="n d">' + esc(c.name) + '</span><span class="s">' + esc(c.d) + '</span></span><span class="go" aria-hidden="true">&rarr;</span></a>';
   }
   function postTile(x, big) {
     return '<a class="col post' + (big ? " big" : "") + '" href="blog.html?p=' + encodeURIComponent(x.slug) + '"><span class="ct">' + esc(x.tag) + " &middot; " + K.date(x.date) + " &middot; " + mins(x) + ' min read</span><span class="n d">' + esc(x.title) + '</span><span class="s">' + esc(x.summary) + '</span><span class="go" aria-hidden="true">&rarr;</span></a>';
@@ -67,7 +74,7 @@
       '<section class="wrap" id="arrivals"><p class="eyebrow">Just landed</p><h2 class="d sh">New Arrivals</h2>' + grid(inStockFirst(P).slice(0, 8)) + '<p><a class="btn" href="search.html">View all products</a></p></section>' +
       soonSection() + '<section class="wrap feats">' + C.highlights.map(function (h) { return '<div><h3 class="d">' + esc(h.t) + "</h3><p>" + esc(h.d) + "</p></div>"; }).join("") + "</section>" +
       (K.posts.length ? '<section class="wrap"><p class="eyebrow">Journal</p><h2 class="d sh">From the Blog</h2><div class="grid3">' + K.posts.slice(0, 3).map(function (x) { return postTile(x); }).join("") + "</div></section>" : "") +
-      '<section class="wrap"><div class="cta"><div><h2 class="d">Hunting a specific casting?</h2><p>Tell us what you are after and we will try to source it.</p></div><a class="btn solid" href="' + wa + '"' + (C.whatsapp ? ' rel="noopener"' : "") + ">" + (C.whatsapp ? "Message us on WhatsApp" : "Contact us") + "</a></div></section>";
+      '<section class="wrap"><div class="cta"><div><h2 class="d">Hunting a specific casting?</h2><p>Tell us what you are after and we will try to source it.</p></div><a class="btn solid" href="' + wa + '"' + (C.whatsapp ? ' rel="noopener noreferrer"' : "") + ">" + (C.whatsapp ? "Message us on WhatsApp" : "Contact us") + "</a></div></section>";
     var sl = Array.prototype.slice.call(app.querySelectorAll(".slide")), i = 0, timer = null, paused = false;
     function show(n) { i = (n + sl.length) % sl.length; sl.forEach(function (s, k) { s.hidden = k !== i; }); $("#dt").textContent = (i + 1) + " / " + sl.length; }
     function stop() { clearInterval(timer); timer = null; }
@@ -160,12 +167,13 @@
   }
 
   pages.search = function () {
-    var q = (K.qs.get("q") || "").trim().slice(0, 80), ql = q.toLowerCase();
-    var items = P.filter(function (p) { return !ql || (p.name + " " + p.brand + " " + p.cat).toLowerCase().indexOf(ql) > -1; });
-    K.meta((q ? "Search: " + q : "All products") + " - " + C.store, "Search die-cast cars by name or brand at " + C.store + ".");
-    app.innerHTML = head("Search", q ? "Results for &ldquo;" + esc(q) + "&rdquo;" : "All Products", "Search by name or brand using the box at the top of the page.") + '<section class="wrap" id="list"></section>';
+    var q = (K.qs.get("q") || "").trim().slice(0, 80);
+    var items = P.filter(function (p) { return !q || match(p.name + " " + p.brand + " " + p.cat, q); });
+    var cols = q ? K.cats.filter(function (c) { return match(c.name + " " + c.d, q); }) : [];
+    K.meta((q ? "Search: " + q : "All products") + " - " + C.store, "Search die-cast cars by name, brand or collection at " + C.store + ".");
+    app.innerHTML = head("Search", q ? "Results for &ldquo;" + esc(q) + "&rdquo;" : "All Products", "Search by name, brand or collection using the box at the top of the page.") + (cols.length ? '<section class="wrap"><p class="eyebrow">Collections</p><div class="grid3">' + cols.map(catTile).join("") + "</div></section>" : "") + '<section class="wrap" id="list"></section>';
     if (items.length) listing(items, $("#list"), { cats: true });
-    else $("#list").innerHTML = '<p class="empty">Nothing matched &ldquo;' + esc(q) + '&rdquo;. Try a brand like Hot Wheels, or browse <a href="collections.html">all collections</a>.</p>';
+    else $("#list").innerHTML = cols.length ? '<p class="empty">No products match yet. Open the collection above and tap Notify me, and we will let you know.</p>' : '<p class="empty">Nothing matched &ldquo;' + esc(q) + '&rdquo;. Try a brand like Hot Wheels, or browse <a href="collections.html">all collections</a>.</p>';
   };
 
   function cartHtml() {
@@ -251,7 +259,7 @@
   };
 
   pages.contact = function () {
-    app.innerHTML = head("We are here to help", "Contact Us", "Questions, special requests or help with an order? Send us a message.") + '<section class="wrap cartgrid"><form id="cf" class="form box" novalidate>' + K.field("Your name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("How can we help?", "msg", 'rows="6" maxlength="1000"', "textarea") + '<button class="btn solid" type="submit">Send message</button></form><aside class="box sum" aria-label="Contact details"><h2 class="d">Support</h2>' + (C.whatsapp ? '<p>WhatsApp: <a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">+' + esc(String(C.whatsapp).replace(/\D/g, "")) + "</a></p>" : "") + (C.email ? '<p>Email: <a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a></p>" : "") + (C.instagram ? '<p><a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a></p>' : "") + (!C.whatsapp && !C.email ? '<p class="fine">Use the form and we will get back to you.</p>' : "") + '<p class="fine"><a href="policies.html">Shipping, payment &amp; returns</a></p></aside></section>';
+    app.innerHTML = head("We are here to help", "Contact Us", "Questions, special requests or help with an order? Send us a message.") + '<section class="wrap cartgrid"><form id="cf" class="form box" novalidate>' + K.field("Your name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("How can we help?", "msg", 'rows="6" maxlength="1000"', "textarea") + '<button class="btn solid" type="submit">Send message</button></form><aside class="box sum" aria-label="Contact details"><h2 class="d">Support</h2>' + (C.whatsapp ? '<p>WhatsApp: <a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener noreferrer">+' + esc(String(C.whatsapp).replace(/\D/g, "")) + "</a></p>" : "") + (K.okEmail(C.email) ? '<p>Email: <a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a></p>" : "") + (K.https(C.instagram) ? '<p><a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">Instagram</a></p>' : "") + (!C.whatsapp && !C.email ? '<p class="fine">Use the form and we will get back to you.</p>' : "") + '<p class="fine"><a href="policies.html">Shipping, payment &amp; returns</a></p></aside></section>';
     var rid = K.qs.get("review"), rp = rid ? K.byId(rid) : null;
     if (rp) $("#f-msg").value = "Review for " + rp.name + ":\nRating (1 to 5): \nMy review: ";
     var nt = K.qs.get("notify");
@@ -261,7 +269,7 @@
       if (!K.validate(f, ["name", "email", "msg"])) return;
       var m = "Message from " + f.elements.name.value.trim() + " (" + f.elements.email.value.trim() + "):\n\n" + f.elements.msg.value.trim();
       if (K.wa(m)) { K.toast("Opening WhatsApp"); f.reset(); }
-      else if (C.email) window.location.href = "mailto:" + C.email + "?subject=" + encodeURIComponent("Message from the website") + "&body=" + encodeURIComponent(m);
+      else if (K.okEmail(C.email)) window.location.href = "mailto:" + C.email + "?subject=" + encodeURIComponent("Message from the website") + "&body=" + encodeURIComponent(m);
       else K.copy(m, "Message copied. Add your WhatsApp or email in config.js so messages can be sent directly.");
     });
   };
