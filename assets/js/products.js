@@ -16,10 +16,10 @@ window.KK_CATS = [
 /* Illustrative images (not photos of the actual products) in assets/img/products/<id>.jpg, used until real photos are added. */
 var KK_ART = { camaro10: 1, corv11: 1, chall15: 1, batboat: 1, jag15: 1, mx5: 1, chiron16: 1, cadi16: 1, cent16: 1, audi17: 1, huayra17: 1, camaro18: 1, demon18: 1, raptor19: 1, merc19: 1, galaxie63: 1 };
 window.KK_PRODUCTS = [
- ["camaro10","\u201910 Camaro SS \u2014 Malaysian Imported",299,"Imported",1,"#E0B13C"],
- ["corv11","\u201911 Corvette Grand Sport",199,"Hot Wheels",1,"#C23B3B"],
+ ["camaro10","\u201910 Camaro SS \u2014 Malaysian Imported",299,"Imported",1,"#C2262B"],
+ ["corv11","\u201911 Corvette Grand Sport",199,"Hot Wheels",1,"#2A5FB8"],
  ["chall15","\u201915 Dodge Challenger SRT + 2 Random Hot Wheels",540,"Bundles",1,"#8A5BD0"],
- ["batboat","1966 Bat Boat",250,"Hot Wheels",1,"#3A4A66"],
+ ["batboat","1966 Bat Boat",250,"Hot Wheels",1,"#1B1B20"],
  ["jag15","\u201915 Jaguar F-Type Project 7 \u2014 Malaysian Imported",550,"Imported",0,"#3F9A6B"],
  ["mx5","\u201915 Mazda MX-5 Miata \u2014 Malaysian Imported",499,"Imported",0,"#C9A45C"],
  ["chiron16","\u201916 Bugatti Chiron (lil creased) \u2014 Malaysian Imported",799,"Imported",0,"#2F6FB5"],
