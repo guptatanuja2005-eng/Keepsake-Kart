@@ -7,6 +7,13 @@
   function none(t) { return head("Oops", t) + '<section class="wrap"><a class="btn solid" href="index.html">Back to home</a></section>'; }
   function hasPre() { return Object.keys(K.cart).some(function (id) { return K.isPre(K.byId(id)); }); }
   function preNote() { return hasPre() ? '<p class="fine">Your order includes pre-order items. They ship when stock arrives, and we will confirm timing with you on WhatsApp.</p>' : ""; }
+  function catImg(c, tile) { return "assets/img/banners/" + c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + (tile ? "-tile" : "") + ".jpg"; }
+  function hasItems(c) { return P.some(function (p) { return p.cat === c.name; }); }
+  function bannerHead(c) { return '<div class="catban"><img src="' + catImg(c) + '" alt="" width="1200" height="375"><div class="catban-t"><p class="eyebrow"><a href="collections.html">Collections</a> / ' + esc(c.name) + '</p><h1 class="d">' + esc(c.name) + '</h1><p class="lead">' + esc(c.d) + "</p></div></div>"; }
+  function soonSection() {
+    var l = K.cats.filter(function (c) { return !hasItems(c); });
+    return l.length ? '<section class="wrap"><p class="eyebrow">On the way</p><h2 class="d sh">Coming Soon</h2><div class="grid3">' + l.map(catTile).join("") + "</div></section>" : "";
+  }
   function rowSection(t, l) { return l.length ? '<section class="wrap"><h2 class="d sh">' + t + "</h2>" + grid(l) + "</section>" : ""; }
   function brandStrip() {
     var b = []; P.forEach(function (p) { if (b.indexOf(p.brand) < 0) b.push(p.brand); });
@@ -40,7 +47,7 @@
   }
   function catTile(c) {
     var n = P.filter(function (p) { return p.cat === c.name; }).length;
-    return '<a class="col" href="' + K.cu(c.name) + '"><span class="ct">' + (n ? n + (n === 1 ? " item" : " items") : "Coming soon") + '</span><span class="n d">' + esc(c.name) + '</span><span class="s">' + esc(c.d) + '</span><span class="go" aria-hidden="true">&rarr;</span></a>';
+    return '<a class="col cat" style="background-image:linear-gradient(0deg,rgba(11,11,13,.92),rgba(11,11,13,.15) 62%),url(' + catImg(c, 1) + ')" href="' + K.cu(c.name) + '"><span class="ct">' + (n ? n + (n === 1 ? " item" : " items") : "Coming soon") + '</span><span class="n d">' + esc(c.name) + '</span><span class="s">' + esc(c.d) + '</span><span class="go" aria-hidden="true">&rarr;</span></a>';
   }
   function postTile(x, big) {
     return '<a class="col post' + (big ? " big" : "") + '" href="blog.html?p=' + encodeURIComponent(x.slug) + '"><span class="ct">' + esc(x.tag) + " &middot; " + K.date(x.date) + " &middot; " + mins(x) + ' min read</span><span class="n d">' + esc(x.title) + '</span><span class="s">' + esc(x.summary) + '</span><span class="go" aria-hidden="true">&rarr;</span></a>';
@@ -48,17 +55,17 @@
 
   pages.home = function () {
     var S = [
-      { h: "Small cars.<br><b>Serious</b> collection.", e: "1:64 scale &middot; Curated for collectors", t: "Hand-picked Hot Wheels, imports and collector finds.", b: "Shop all", l: "search.html", c: "#C9A45C" },
-      { h: "Fresh in the <b>garage</b>.", e: "New arrivals", t: "The latest pieces to land, ready for your collection.", b: "See new arrivals", l: "#arrivals", c: "#2F6FB5" },
-      { h: "Imported <b>finds</b>.", e: "Malaysian and US imports", t: "Hard-to-find editions you will not see on local shelves.", b: "Shop imports", l: K.cu("Imported"), c: "#C23B3B" }
+      { h: "Small cars.<br><b>Serious</b> collection.", e: "1:64 scale &middot; Curated for collectors", t: "Hand-picked Hot Wheels, imports and collector finds.", b: "Shop all", l: "search.html", c: "#C9A45C", i: "assets/img/banners/hero-1.jpg", a: "Four collectible model cars lined up on a glossy black surface" },
+      { h: "Fresh in the <b>garage</b>.", e: "New arrivals", t: "The latest pieces to land, ready for your collection.", b: "See new arrivals", l: "#arrivals", c: "#2F6FB5", i: "assets/img/banners/hero-2.jpg", a: "A blue and a white collectible sports car on a glossy black surface" },
+      { h: "Imported <b>finds</b>.", e: "Malaysian and US imports", t: "Hard-to-find editions you will not see on local shelves.", b: "Shop imports", l: K.cu("Imported"), c: "#C23B3B", i: "assets/img/banners/hero-3.jpg", a: "Red and white collectible sports cars on a glossy black surface" }
     ];
     var wa = C.whatsapp ? "https://wa.me/" + esc(String(C.whatsapp).replace(/\D/g, "")) : "contact.html";
     app.innerHTML = '<h1 class="sr">Keepsake Kart: premium die-cast collectibles</h1><section class="hero" aria-roledescription="carousel" aria-label="Featured banners">' +
-      S.map(function (s, i) { return '<div class="slide" role="group" aria-label="Banner ' + (i + 1) + ' of ' + S.length + '"' + (i ? " hidden" : "") + '><div><p class="eyebrow">' + s.e + '</p><h2 class="hh d">' + s.h + '</h2><p class="lead">' + s.t + '</p><a class="btn solid" href="' + s.l + '">' + s.b + '</a></div><div class="heroart" aria-hidden="true">' + K.car(s.c) + "</div></div>"; }).join("") +
+      S.map(function (s, i) { return '<div class="slide" role="group" aria-label="Banner ' + (i + 1) + ' of ' + S.length + '"' + (i ? " hidden" : "") + '><div><p class="eyebrow">' + s.e + '</p><h2 class="hh d">' + s.h + '</h2><p class="lead">' + s.t + '</p><a class="btn solid" href="' + s.l + '">' + s.b + '</a></div><div class="heroart"><img src="' + s.i + '" alt="' + esc(s.a) + '" width="1200" height="800"' + (i ? ' loading="lazy"' : "") + "></div></div>"; }).join("") +
       '<div class="dots"><button type="button" id="pv" aria-label="Previous banner">&lsaquo;</button><button type="button" id="ps" aria-label="Pause banner rotation">Pause</button><button type="button" id="nx" aria-label="Next banner">&rsaquo;</button><span id="dt" aria-live="off">1 / ' + S.length + '</span></div></section>' +
-      brandStrip() + rowSection("Recently viewed", K.recent(null, 4)) + '<section class="wrap"><p class="eyebrow">Shop by</p><h2 class="d sh">Featured Collections</h2><div class="grid3">' + K.cats.slice(0, 4).map(catTile).join("") + '</div><p><a class="btn" href="collections.html">All collections</a></p></section>' +
+      brandStrip() + rowSection("Recently viewed", K.recent(null, 4)) + '<section class="wrap"><p class="eyebrow">Shop by</p><h2 class="d sh">Featured Collections</h2><div class="grid3">' + K.cats.filter(hasItems).slice(0, 4).map(catTile).join("") + '</div><p><a class="btn" href="collections.html">All collections</a></p></section>' +
       '<section class="wrap" id="arrivals"><p class="eyebrow">Just landed</p><h2 class="d sh">New Arrivals</h2>' + grid(inStockFirst(P).slice(0, 8)) + '<p><a class="btn" href="search.html">View all products</a></p></section>' +
-      '<section class="wrap feats">' + C.highlights.map(function (h) { return '<div><h3 class="d">' + esc(h.t) + "</h3><p>" + esc(h.d) + "</p></div>"; }).join("") + "</section>" +
+      soonSection() + '<section class="wrap feats">' + C.highlights.map(function (h) { return '<div><h3 class="d">' + esc(h.t) + "</h3><p>" + esc(h.d) + "</p></div>"; }).join("") + "</section>" +
       (K.posts.length ? '<section class="wrap"><p class="eyebrow">Journal</p><h2 class="d sh">From the Blog</h2><div class="grid3">' + K.posts.slice(0, 3).map(function (x) { return postTile(x); }).join("") + "</div></section>" : "") +
       '<section class="wrap"><div class="cta"><div><h2 class="d">Hunting a specific casting?</h2><p>Tell us what you are after and we will try to source it.</p></div><a class="btn solid" href="' + wa + '"' + (C.whatsapp ? ' rel="noopener"' : "") + ">" + (C.whatsapp ? "Message us on WhatsApp" : "Contact us") + "</a></div></section>";
     var sl = Array.prototype.slice.call(app.querySelectorAll(".slide")), i = 0, timer = null, paused = false;
@@ -76,7 +83,7 @@
   };
 
   pages.collections = function () {
-    app.innerHTML = head("Browse", "All Collections", "Every product category in one place.") + '<section class="wrap"><div class="grid3">' + K.cats.map(catTile).join("") + "</div></section>";
+    app.innerHTML = head("Browse", "All Collections", "Every product category in one place.") + '<section class="wrap"><div class="grid3">' + K.cats.filter(hasItems).map(catTile).join("") + "</div></section>" + soonSection();
   };
 
   pages.category = function () {
@@ -84,9 +91,9 @@
     if (!c) { K.meta("Category not found - " + C.store, "This category does not exist."); app.innerHTML = none("Category not found"); return; }
     K.meta(c.name + " die-cast cars - " + C.store, c.d + " Shop " + c.name + " at " + C.store + ".");
     var items = P.filter(function (p) { return p.cat === c.name; });
-    app.innerHTML = head('<a href="collections.html">Collections</a> / ' + esc(c.name), esc(c.name), esc(c.d)) + '<section class="wrap" id="list"></section>';
+    app.innerHTML = bannerHead(c) + '<section class="wrap" id="list"></section>';
     if (items.length) listing(items, $("#list"));
-    else $("#list").innerHTML = '<p class="empty">Coming soon. Want something from this category? <a href="contact.html">Message us</a> and we will try to source it.</p>';
+    else $("#list").innerHTML = '<div class="box soon"><p class="eyebrow">Coming soon</p><h2 class="d">' + esc(c.name) + ' is coming soon</h2><p>We do not have any ' + esc(c.name) + ' listed yet. Leave us a message and we will let you know when it is available.</p><p class="acts"><a class="btn solid" href="contact.html?notify=' + encodeURIComponent(c.name) + '">Notify me</a><a class="btn" href="' + K.cu("Hot Wheels") + '">Shop Hot Wheels</a></p></div>';
   };
 
   pages.product = function () {
@@ -247,6 +254,8 @@
     app.innerHTML = head("We are here to help", "Contact Us", "Questions, special requests or help with an order? Send us a message.") + '<section class="wrap cartgrid"><form id="cf" class="form box" novalidate>' + K.field("Your name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("How can we help?", "msg", 'rows="6" maxlength="1000"', "textarea") + '<button class="btn solid" type="submit">Send message</button></form><aside class="box sum" aria-label="Contact details"><h2 class="d">Support</h2>' + (C.whatsapp ? '<p>WhatsApp: <a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener">+' + esc(String(C.whatsapp).replace(/\D/g, "")) + "</a></p>" : "") + (C.email ? '<p>Email: <a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a></p>" : "") + (C.instagram ? '<p><a href="' + esc(C.instagram) + '" rel="noopener">Instagram</a></p>' : "") + (!C.whatsapp && !C.email ? '<p class="fine">Use the form and we will get back to you.</p>' : "") + '<p class="fine"><a href="policies.html">Shipping, payment &amp; returns</a></p></aside></section>';
     var rid = K.qs.get("review"), rp = rid ? K.byId(rid) : null;
     if (rp) $("#f-msg").value = "Review for " + rp.name + ":\nRating (1 to 5): \nMy review: ";
+    var nt = K.qs.get("notify");
+    if (nt) $("#f-msg").value = "Please let me know when " + String(nt).slice(0, 60) + " is available.";
     $("#cf").addEventListener("submit", function (e) {
       e.preventDefault(); var f = e.target;
       if (!K.validate(f, ["name", "email", "msg"])) return;

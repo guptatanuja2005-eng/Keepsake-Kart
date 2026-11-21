@@ -42,3 +42,11 @@ Give a product the category `"Pre-Orders"` in `products.js`. It appears in the P
 
 ## Backend
 See `backend/README.md`. The database design is a draft and is not connected to the site yet.
+
+## Logo, hero photos and category banners
+- Logo: `assets/img/logo.svg` (also `logo-512.png`, `apple-touch-icon.png`). The home page hero uses three crops of one studio photo: `assets/img/banners/hero-1.jpg` to `hero-3.jpg` (swap the files to change them, keep 3:2).
+- Each collection has a wide banner `assets/img/banners/<name>.jpg` (1200 x 375) and a tile `<name>-tile.jpg` (600 x 450), named from the category in lower case with dashes (for example `mini-gt`). The banners are brand-neutral drawings, not product photos.
+- Check you have the right to use the hero photo (for example it is yours or properly licensed).
+
+## Coming Soon
+A collection with no products shows "Coming soon" on the Collections page and home page, and its page offers a "Notify me" button that opens the contact form with a message filled in. Add a product with that category in `products.js` and it becomes a normal collection automatically.

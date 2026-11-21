@@ -152,3 +152,13 @@ input.bad,textarea.bad,select.bad{border-color:var(--bad)}
 /* ---- product pictures sit on white, like studio shots ---- */
 .ph,.th,.gal,.thb{background:#fff}
 .card.out .ph{opacity:.55}
+/* ---- logo, hero photos, category banners ---- */
+.logo{display:inline-flex;align-items:center;gap:10px}.lm{width:34px;height:34px;border-radius:8px;display:block}
+.heroart{padding:0;overflow:hidden;aspect-ratio:3/2;background:#000}.heroart img{width:100%;height:100%;object-fit:cover;display:block}
+.col.cat{min-height:260px;background-size:cover;background-position:center}
+.catban{position:relative;overflow:hidden;background:#0B0B0D;border-bottom:1px solid var(--line)}
+.catban img{display:block;width:100%;height:clamp(200px,28vw,340px);object-fit:cover;object-position:right center}
+.catban::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,11,13,.88),rgba(11,11,13,.2) 78%)}
+.catban-t{position:absolute;z-index:1;left:0;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;padding:0 5vw;max-width:min(680px,100%)}
+.catban-t h1{margin:12px 0 0;font-size:clamp(36px,6vw,72px);line-height:1}.catban-t .lead{margin:10px 0 0}.catban-t .eyebrow a{text-decoration:underline}
+.soon.box{max-width:720px;display:grid;gap:12px}.soon h2{margin:0;font-size:clamp(30px,4vw,44px)}.soon p{color:var(--mu);margin:0}
