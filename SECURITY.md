@@ -16,7 +16,7 @@ No website can be guaranteed unhackable. This page lists what is built in, and w
 3. **Turn on secret scanning and Dependabot alerts** in the repository's Security settings.
 4. **GitHub Pages:** tick *Enforce HTTPS*.
 5. **Custom domain:** use two-factor and a transfer lock at the registrar, and turn on DNSSEC. A free Cloudflare account in front of the site adds security headers (such as HSTS and frame blocking), bot protection and a firewall.
-6. **Never put passwords or private keys in the repository.** A Supabase *anon* key is public by design, but the *service role* key must never be shared or committed.
+6. **Never put passwords or private keys in the repository.** A Supabase *publishable* key (`sb_publishable_...`) is public by design, but the *secret* key (`sb_secret_...`) and any old `service_role` key must never be shared or committed.
 7. **Check every order before accepting it.** Totals are worked out in the visitor's browser, so a determined visitor could change them. Compare each WhatsApp order with your own price list.
 8. **Protect payments:** share UPI details only inside the WhatsApp chat the customer started, and tell customers you never ask for OTPs or PINs.
 

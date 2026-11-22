@@ -1,5 +1,6 @@
 -- Keepsake Kart backend schema for Supabase (PostgreSQL).
 -- DRAFT: written without access to a live database, so it has NOT been run or tested.
+-- When creating the Supabase project, leave "Automatically expose new tables" unticked (this script grants access itself).
 -- Review it, run it in the Supabase SQL editor on a test project first, and fix anything that errors.
 -- The website does not use this yet. It is the server side of Phase 5.
 
@@ -71,6 +72,16 @@ create policy "products are public"      on public.products for select using (ac
 create policy "approved reviews public"  on public.reviews  for select using (approved);
 create policy "anyone can submit review" on public.reviews  for insert with check (approved = false);
 create policy "owner reads own orders"   on public.orders   for select using (auth.uid() = user_id);
+
+-- Newer Supabase projects do not expose new tables to the API automatically, so access is granted explicitly here.
+-- Start from nothing, then give back only what the shop needs.
+revoke all on table public.products, public.shipping_options, public.coupons, public.orders, public.reviews from anon, authenticated;
+grant select on table public.products to anon, authenticated;            -- everyone can browse products
+grant select, insert on table public.reviews to anon, authenticated;     -- read approved reviews, submit new ones (the policy forces approved = false)
+grant select on table public.orders to authenticated;                    -- customers read only their own orders (policy)
+-- shipping_options and coupons get no client access; only place_order (below) reads them.
+-- Orders are created through place_order, never by inserting directly.
+-- If a request fails with error 42501 (permission denied), a grant is missing: check grants before policies.
 
 -- Places an order on the server: checks stock, takes prices, shipping and coupons from the database
 -- (never from the browser), reduces stock atomically and saves the order. Returns the order id.
