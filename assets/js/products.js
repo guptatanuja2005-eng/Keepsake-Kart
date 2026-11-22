@@ -4,8 +4,6 @@ window.KK_CATS = [
   { name: "Imported", d: "Malaysian and US imports you won\u2019t find on local shelves." },
   { name: "Bundles", d: "Value bundles with bonus cars." },
   { name: "Matchbox", d: "Everyday classics and movie editions." },
-  { name: "LEGO", d: "Bricks and sets for builders and collectors." },
-  { name: "Mini GT", d: "Precision-built, boxed, display-ready." },
   { name: "Bburago", d: "Supercars and scale models." },
   { name: "Majorette", d: "Colourful die-cast classics." },
   { name: "Pre-Orders", d: "Reserve upcoming drops before they land." }
@@ -14,7 +12,7 @@ window.KK_CATS = [
    With a number, the shop shows "Only N left" and stops orders above N; qty 0 marks the product sold out.
    To use real photos add an images array to a product, e.g. images: ["assets/img/camaro10-1.jpg"]. */
 /* Brands shown in the brand strip and search suggestions (include brands you plan to stock). */
-window.KK_BRANDS = ["Hot Wheels", "Matchbox", "LEGO", "Mini GT", "Bburago", "Majorette"];
+window.KK_BRANDS = ["Hot Wheels", "Matchbox", "Bburago", "Majorette"];
 /* Illustrative images (not photos of the actual products) in assets/img/products/<id>.jpg, used until real photos are added. */
 var KK_ART = { camaro10: 1, corv11: 1, chall15: 1, batboat: 1, jag15: 1, mx5: 1, chiron16: 1, cadi16: 1, cent16: 1, audi17: 1, huayra17: 1, camaro18: 1, demon18: 1, raptor19: 1, merc19: 1, galaxie63: 1 };
 window.KK_PRODUCTS = [

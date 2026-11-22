@@ -19,6 +19,9 @@
     var l = K.cats.filter(function (c) { return !hasItems(c); });
     return l.length ? '<section class="wrap"><p class="eyebrow">On the way</p><h2 class="d sh">Coming Soon</h2><div class="grid3">' + l.map(catTile).join("") + "</div></section>" : "";
   }
+  function loginBanner() {
+    return K.user() ? "" : '<section class="wrap"><div class="cta"><div><h2 class="d">Login or create an account</h2><p>Save your wishlist, check out faster and see your orders. Log in with your mobile number and a one-time code.</p></div><p class="acts"><a class="btn solid" href="account.html#login">Login</a><a class="btn" href="account.html#create">Create account</a></p></div></section>';
+  }
   function rowSection(t, l) { return l.length ? '<section class="wrap"><h2 class="d sh">' + t + "</h2>" + grid(l) + "</section>" : ""; }
   function brandStrip() {
     var b = K.brands;
@@ -66,11 +69,11 @@
       { h: "Fresh in the <b>garage</b>.", e: "New arrivals", t: "The latest pieces to land, ready for your collection.", b: "See new arrivals", l: "#arrivals", c: "#2F6FB5", i: "assets/img/banners/hero-2.jpg", a: "A blue and a white collectible sports car on a glossy black surface" },
       { h: "Imported <b>finds</b>.", e: "Malaysian and US imports", t: "Hard-to-find editions you will not see on local shelves.", b: "Shop imports", l: K.cu("Imported"), c: "#C23B3B", i: "assets/img/banners/hero-3.jpg", a: "Red and white collectible sports cars on a glossy black surface" }
     ];
-    var wa = C.whatsapp ? "https://wa.me/" + esc(String(C.whatsapp).replace(/\D/g, "")) : "contact.html";
+    var wa = C.whatsapp ? "https://wa.me/" + esc(String(C.whatsapp).replace(/\D/g, "")) : "about.html#contact";
     app.innerHTML = '<h1 class="sr">Keepsake Kart: premium die-cast collectibles</h1><section class="hero" aria-roledescription="carousel" aria-label="Featured banners">' +
       S.map(function (s, i) { return '<div class="slide" role="group" aria-label="Banner ' + (i + 1) + ' of ' + S.length + '"' + (i ? " hidden" : "") + '><div><p class="eyebrow">' + s.e + '</p><h2 class="hh d">' + s.h + '</h2><p class="lead">' + s.t + '</p><a class="btn solid" href="' + s.l + '">' + s.b + '</a></div><div class="heroart"><img src="' + s.i + '" alt="' + esc(s.a) + '" width="1200" height="800"' + (i ? ' loading="lazy"' : "") + "></div></div>"; }).join("") +
       '<div class="dots"><button type="button" id="pv" aria-label="Previous banner">&lsaquo;</button><button type="button" id="ps" aria-label="Pause banner rotation">Pause</button><button type="button" id="nx" aria-label="Next banner">&rsaquo;</button><span id="dt" aria-live="off">1 / ' + S.length + '</span></div></section>' +
-      brandStrip() + rowSection("Recently viewed", K.recent(null, 4)) + '<section class="wrap"><p class="eyebrow">Shop by</p><h2 class="d sh">Featured Collections</h2><div class="grid3">' + K.cats.filter(hasItems).slice(0, 4).map(catTile).join("") + '</div><p><a class="btn" href="collections.html">All collections</a></p></section>' +
+      loginBanner() + brandStrip() + rowSection("Recently viewed", K.recent(null, 4)) + '<section class="wrap"><p class="eyebrow">Shop by</p><h2 class="d sh">Featured Collections</h2><div class="grid3">' + K.cats.filter(hasItems).slice(0, 4).map(catTile).join("") + '</div><p><a class="btn" href="collections.html">All collections</a></p></section>' +
       '<section class="wrap" id="arrivals"><p class="eyebrow">Just landed</p><h2 class="d sh">New Arrivals</h2>' + grid(inStockFirst(P).slice(0, 8)) + '<p><a class="btn" href="search.html">View all products</a></p></section>' +
       soonSection() + '<section class="wrap feats">' + C.highlights.map(function (h) { return '<div><h3 class="d">' + esc(h.t) + "</h3><p>" + esc(h.d) + "</p></div>"; }).join("") + "</section>" +
       (K.posts.length ? '<section class="wrap"><p class="eyebrow">Journal</p><h2 class="d sh">From the Blog</h2><div class="grid3">' + K.posts.slice(0, 3).map(function (x) { return postTile(x); }).join("") + "</div></section>" : "") +
@@ -100,7 +103,7 @@
     var items = P.filter(function (p) { return p.cat === c.name; });
     app.innerHTML = bannerHead(c) + '<section class="wrap" id="list"></section>';
     if (items.length) listing(items, $("#list"));
-    else $("#list").innerHTML = '<div class="box soon"><p class="eyebrow">Coming soon</p><h2 class="d">' + esc(c.name) + ' is coming soon</h2><p>We do not have any ' + esc(c.name) + ' listed yet. Leave us a message and we will let you know when it is available.</p><p class="acts"><a class="btn solid" href="contact.html?notify=' + encodeURIComponent(c.name) + '">Notify me</a><a class="btn" href="' + K.cu("Hot Wheels") + '">Shop Hot Wheels</a></p></div>';
+    else $("#list").innerHTML = '<div class="box soon"><p class="eyebrow">Coming soon</p><h2 class="d">' + esc(c.name) + ' is coming soon</h2><p>We do not have any ' + esc(c.name) + ' listed yet. Leave us a message and we will let you know when it is available.</p><p class="acts"><a class="btn solid" href="about.html?notify=' + encodeURIComponent(c.name) + '#contact">Notify me</a><a class="btn" href="' + K.cu("Hot Wheels") + '">Shop Hot Wheels</a></p></div>';
   };
 
   pages.product = function () {
@@ -113,8 +116,8 @@
     var rv = K.reviewsFor(p.id), avg = rv.length ? rv.reduce(function (n, r) { return n + r.rating; }, 0) / rv.length : 0;
     var stk = p.stock ? (K.low(p) ? "Only " + p.qty + " left" : (K.isPre(p) ? "Open for pre-order" : "In stock")) : "Sold out", dis = p.stock ? "" : " disabled";
     var gal = imgs.length ? '<button class="zoom" id="zm" type="button" aria-label="Enlarge photo"><img class="pimg" id="mainimg" src="' + esc(imgs[0]) + '" alt="' + esc(p.name + (imgs[0] === p.art ? " (illustrative image)" : "")) + '" width="800" height="600" data-c="' + esc(p.color) + '"' + (C.photos && auto && p.art ? ' data-fb="' + esc(p.art) + '"' : "") + '></button><div class="thumbs" id="thb"></div>' : K.car(p.color, p.name);
-    var revs = rv.length ? rv.map(function (r) { return '<div class="rev"><div>' + K.stars(r.rating) + " <b>" + esc(r.name) + '</b> <span class="fine">' + K.date(r.date) + "</span></div><p>" + esc(r.text) + "</p></div>"; }).join("") : '<p class="empty">No reviews yet. Bought this? <a href="contact.html?review=' + encodeURIComponent(p.id) + '">Share your review</a>.</p>';
-    app.innerHTML = '<section class="wrap pd"><div><nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a> / <a href="' + K.cu(p.cat) + '">' + esc(p.cat) + '</a> / <span aria-current="page">' + esc(p.name) + '</span></nav><div class="gal">' + gal + '</div>' + (imgs[0] && imgs[0] === p.art ? '<p class="fine cap">Illustrative image only. The actual product is a 1:64 die-cast model. A product photo is coming soon.</p>' : "") + '</div><div class="info buybox"><p class="eyebrow">' + esc(p.brand) + " &middot; " + esc(p.cat) + '</p><h1 class="d">' + esc(p.name) + "</h1>" + (rv.length ? '<p class="rate">' + K.stars(avg) + ' <a href="#reviews">' + avg.toFixed(1) + " (" + rv.length + ")</a></p>" : "") + '<p class="pp big">' + K.money(p.price) + '</p><p class="stk ' + (p.stock ? (K.low(p) ? "low" : "in") : "no") + '">' + stk + "</p><p>" + esc(p.desc) + '</p><div class="buy"><label class="sr" for="pq">Quantity</label><div class="qty q2"><button type="button" id="qd" aria-label="Decrease quantity"' + dis + '>&minus;</button><input id="pq" type="number" min="1" max="' + Math.max(1, K.avail(p)) + '" value="1"' + dis + '><button type="button" id="qu" aria-label="Increase quantity"' + dis + '>+</button></div><button id="addq" class="btn solid" type="button"' + dis + ">" + (p.stock ? (K.isPre(p) ? "Pre-order now" : "Add to cart") : "Sold out") + '</button></div><p class="acts"><button id="buyn" class="btn" type="button"' + dis + ">Buy now</button>" + K.wishBtn(p, true) + '</p><p class="fine">Up to ' + K.avail(p) + ' per order. <a href="policies.html">Shipping, payment &amp; returns</a></p>' + (p.stock ? "" : '<p class="fine">Want it back in stock? <a href="contact.html">Message us</a>.</p>') + '</div></section><section class="wrap" id="details"><h2 class="d sh">Details</h2><dl class="dl"><dt>Brand</dt><dd>' + esc(p.brand) + "</dd><dt>Category</dt><dd>" + esc(p.cat) + "</dd><dt>Availability</dt><dd>" + stk + "</dd><dt>Product code</dt><dd>" + esc(p.id) + '</dd></dl></section><section class="wrap" id="reviews"><h2 class="d sh">Reviews</h2>' + revs + "</section>" +
+    var revs = rv.length ? rv.map(function (r) { return '<div class="rev"><div>' + K.stars(r.rating) + " <b>" + esc(r.name) + '</b> <span class="fine">' + K.date(r.date) + "</span></div><p>" + esc(r.text) + "</p></div>"; }).join("") : '<p class="empty">No reviews yet. Bought this? <a href="about.html?review=' + encodeURIComponent(p.id) + '#contact">Share your review</a>.</p>';
+    app.innerHTML = '<section class="wrap pd"><div><nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a> / <a href="' + K.cu(p.cat) + '">' + esc(p.cat) + '</a> / <span aria-current="page">' + esc(p.name) + '</span></nav><div class="gal">' + gal + '</div>' + (imgs[0] && imgs[0] === p.art ? '<p class="fine cap">Illustrative image only. The actual product is a 1:64 die-cast model. A product photo is coming soon.</p>' : "") + '</div><div class="info buybox"><p class="eyebrow">' + esc(p.brand) + " &middot; " + esc(p.cat) + '</p><h1 class="d">' + esc(p.name) + "</h1>" + (rv.length ? '<p class="rate">' + K.stars(avg) + ' <a href="#reviews">' + avg.toFixed(1) + " (" + rv.length + ")</a></p>" : "") + '<p class="pp big">' + K.money(p.price) + '</p><p class="stk ' + (p.stock ? (K.low(p) ? "low" : "in") : "no") + '">' + stk + "</p><p>" + esc(p.desc) + '</p><div class="buy"><label class="sr" for="pq">Quantity</label><div class="qty q2"><button type="button" id="qd" aria-label="Decrease quantity"' + dis + '>&minus;</button><input id="pq" type="number" min="1" max="' + Math.max(1, K.avail(p)) + '" value="1"' + dis + '><button type="button" id="qu" aria-label="Increase quantity"' + dis + '>+</button></div><button id="addq" class="btn solid" type="button"' + dis + ">" + (p.stock ? (K.isPre(p) ? "Pre-order now" : "Add to cart") : "Sold out") + '</button></div><p class="acts"><button id="buyn" class="btn" type="button"' + dis + ">Buy now</button>" + K.wishBtn(p, true) + '</p><p class="fine">Up to ' + K.avail(p) + ' per order. <a href="policies.html">Shipping, payment &amp; returns</a></p>' + (p.stock ? "" : '<p class="fine">Want it back in stock? <a href="about.html#contact">Message us</a>.</p>') + '</div></section><section class="wrap" id="details"><h2 class="d sh">Details</h2><dl class="dl"><dt>Brand</dt><dd>' + esc(p.brand) + "</dd><dt>Category</dt><dd>" + esc(p.cat) + "</dd><dt>Availability</dt><dd>" + stk + "</dd><dt>Product code</dt><dd>" + esc(p.id) + '</dd></dl></section><section class="wrap" id="reviews"><h2 class="d sh">Reviews</h2>' + revs + "</section>" +
       rowSection("You may also like", K.reco([p], 4, [p.id])) + rowSection("Recently viewed", K.recent(p.id, 4)) +
       '<div class="mbar"><span class="pp">' + K.money(p.price) + '</span><button id="addm" class="btn solid" type="button"' + dis + ">" + (p.stock ? (K.isPre(p) ? "Pre-order now" : "Add to cart") : "Sold out") + "</button></div>";
     function add() {
@@ -217,12 +220,15 @@
     function draw() {
       if (done) return;
       if (!K.count()) { app.innerHTML = head("Checkout", "Checkout") + '<section class="wrap"><div class="empty box"><p>Your cart is empty.</p><a class="btn solid" href="search.html">Browse products</a></div></section>'; return; }
-      var u = K.get("kk_user", {}) || {};
+      var u = K.user() || {};
       var sum = Object.keys(K.cart).map(function (id) { var p = K.byId(id); return '<div class="sl"><span>' + esc(p.name) + " &times; " + K.cart[id] + "</span><span>" + K.money(p.price * K.cart[id]) + "</span></div>"; }).join("");
       var opts = '<option value="">Select state</option>' + K.STATES.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("");
-      app.innerHTML = head("Almost there", "Checkout") + '<section class="wrap"><div class="cartgrid"><form id="co" class="form box" novalidate><h2 class="d">1. Delivery address</h2><div class="two">' + K.field("Full name", "name", 'autocomplete="name" maxlength="60" value="' + esc(u.name || "") + '"') + K.field("Mobile number (WhatsApp)", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16" value="' + esc(u.phone || "") + '"') + "</div>" + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120" value="' + esc(u.email || "") + '"') + K.field("Address (house, street, area)", "address", 'rows="3" maxlength="200" autocomplete="street-address"', "textarea") + '<div class="two">' + K.field("City", "city", 'autocomplete="address-level2" maxlength="50"') + K.field("State", "state", 'autocomplete="address-level1"', "select", opts) + "</div>" + K.field("PIN code", "pin", 'inputmode="numeric" maxlength="6" autocomplete="postal-code"') + '<h2 class="d">2. Shipping</h2><div class="opts" role="radiogroup" aria-label="Shipping method">' + radios("ship", C.shipping) + '</div><h2 class="d">3. Payment</h2><div class="opts" role="radiogroup" aria-label="Payment method">' + radios("pay", C.payments) + '</div><p class="fine">' + esc(C.checkoutNote) + ' <a href="policies.html">Read our policies</a>.</p>' + preNote() + (u.name ? "" : '<div class="fld"><label class="chk"><input type="checkbox" id="f-acct" name="acct" checked> Create an account to save my details and see my orders</label></div>') + '<div class="fld"><label class="chk"><input type="checkbox" id="f-consent" name="consent"> I have checked my address and order details.</label><span class="err" id="e-consent"></span></div><button class="btn solid" id="place" type="submit">Place order</button></form><aside class="box sum" aria-label="Order summary"><h2 class="d">Order summary</h2>' + sum + '<div class="sl"><span>Subtotal</span><span id="ssub"></span></div><div class="sl" id="srow" hidden><span id="sdl"></span><span id="sdv"></span></div><div class="sl"><span>Shipping</span><span id="sshp"></span></div><div class="tot"><span>Total</span><b id="stot"></b></div><a class="btn" href="cart.html">Edit cart</a></aside></div></section>';
+      app.innerHTML = head("Almost there", "Checkout") + '<section class="wrap"><div class="cartgrid"><form id="co" class="form box" novalidate><h2 class="d">1. Delivery address</h2>' + REQ + '<div class="two">' + K.field("Full name", "name", 'autocomplete="name" maxlength="60" value="' + esc(u.name || "") + '"') + K.field("Mobile number (WhatsApp)", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16" value="' + esc(u.phone || "") + '"') + "</div>" + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120" value="' + esc(u.email || "") + '"') + K.field("Address (house, street, area)", "address", 'rows="3" maxlength="200" autocomplete="street-address"', "textarea") + '<div class="two">' + K.field("City", "city", 'autocomplete="address-level2" maxlength="50"') + K.field("State", "state", 'autocomplete="address-level1"', "select", opts) + "</div>" + K.field("PIN code", "pin", 'inputmode="numeric" maxlength="6" autocomplete="postal-code"') + '<h2 class="d">2. Shipping</h2><div class="opts" role="radiogroup" aria-label="Shipping method">' + radios("ship", C.shipping) + '</div><h2 class="d">3. Payment</h2><div class="opts" role="radiogroup" aria-label="Payment method">' + radios("pay", C.payments) + '</div><p class="fine">' + esc(C.checkoutNote) + ' <a href="policies.html">Read our policies</a>.</p>' + preNote() + (u.name ? "" : '<div class="fld"><label class="chk"><input type="checkbox" id="f-acct" name="acct" checked> Also create an account with these details (log in later with your mobile number and OTP)</label></div>') + '<div class="fld"><label class="chk"><input type="checkbox" id="f-consent" name="consent"> I have checked my address and order details. <span class="req" aria-hidden="true">*</span></label><span class="err" id="e-consent"></span></div><div class="fld"><label class="chk"><input type="checkbox" id="f-terms" name="terms"> I agree to the <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms of Use</a> and <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. <span class="req" aria-hidden="true">*</span></label><span class="err" id="e-terms"></span></div><button class="btn go" id="place" type="submit" disabled aria-describedby="gate">Place order</button><p class="fine" id="gate">Tick both boxes to place your order.</p></form><aside class="box sum" aria-label="Order summary"><h2 class="d">Order summary</h2>' + sum + '<div class="sl"><span>Subtotal</span><span id="ssub"></span></div><div class="sl" id="srow" hidden><span id="sdl"></span><span id="sdv"></span></div><div class="sl"><span>Shipping</span><span id="sshp"></span></div><div class="tot"><span>Total</span><b id="stot"></b></div><a class="btn" href="cart.html">Edit cart</a></aside></div></section>';
       totals();
       $("#co").addEventListener("change", totals);
+      var c1 = $("#f-consent"), c2 = $("#f-terms"), pb = $("#place");
+      function gate() { var on = !!(c1.checked && c2.checked); pb.disabled = !on; pb.classList.toggle("ready", on); $("#gate").textContent = on ? "" : "Tick both boxes to place your order."; }
+      c1.addEventListener("change", gate); c2.addEventListener("change", gate); gate();
       $("#co").addEventListener("submit", onSubmit);
     }
     function onSubmit(e) {
@@ -235,10 +241,11 @@
       if (cp0 && cp0.err) { K.set("kk_coupon", ""); K.toast("Coupon removed: " + cp0.err); draw(); return; }
       var dsc = cp0 ? cp0.discount : 0;
       var ok = K.validate(f, ["name", "phone", "email", "address", "city", "state", "pin"]);
-      var ce = $("#e-consent"), cc = f.elements.consent;
+      var ce = $("#e-consent"), cc = f.elements.consent, te = $("#e-terms"), tc = f.elements.terms;
       ce.textContent = cc.checked ? "" : "Please confirm before placing your order."; cc.setAttribute("aria-invalid", String(!cc.checked));
-      if (!cc.checked && ok) { cc.focus(); ok = false; }
-      if (!cc.checked) ok = false;
+      te.textContent = tc.checked ? "" : "Please agree to the terms to place your order."; tc.setAttribute("aria-invalid", String(!tc.checked));
+      if (ok && !cc.checked) cc.focus(); else if (ok && !tc.checked) tc.focus();
+      if (!cc.checked || !tc.checked) ok = false;
       if (!ok) { K.toast("Please fix the highlighted fields"); return; }
       placing = true; $("#place").disabled = true;
       var sh = shipSel(), pay = paySel(), v = function (n) { return f.elements[n].value.trim(); };
@@ -247,19 +254,32 @@
       var o = { id: "KK" + Date.now().toString(36).toUpperCase(), date: new Date().toISOString(), items: items, subtotal: sub, discount: dsc, coupon: dsc ? cp0.code : "", shipping: sh.price, shipLabel: sh.label, total: sub - dsc + sh.price, pay: pay.label, status: hasPre() ? "Awaiting confirmation (includes pre-order)" : "Awaiting confirmation", customer: { name: v("name"), phone: K.phoneNorm(v("phone")), email: v("email"), address: v("address") + ", " + v("city") + ", " + v("state") + " - " + v("pin") } };
       var orders = K.get("kk_orders", []); if (!Array.isArray(orders)) orders = [];
       orders.unshift(o); K.set("kk_orders", orders);
-      if (f.elements.acct && f.elements.acct.checked) { K.set("kk_user", { name: o.customer.name, email: o.customer.email, phone: o.customer.phone }); K.refreshAcct(); }
+      if (f.elements.acct && f.elements.acct.checked && !K.user() && !K.findAccount(o.customer.phone)) K.createAccount({ name: o.customer.name, email: o.customer.email, phone: o.customer.phone });
       var msg = "New order " + o.id + " - " + C.store + "\n\n" + items.map(function (i) { return "- " + i.name + " x " + i.qty + " = " + K.money(i.price * i.qty); }).join("\n") + "\n\nSubtotal: " + K.money(o.subtotal) + (o.discount ? "\nCoupon " + o.coupon + ": -" + K.money(o.discount) : "") + "\n" + o.shipLabel + ": " + K.money(o.shipping) + "\nTotal: " + K.money(o.total) + "\nPayment: " + o.pay + (/pre-order/.test(o.status) ? "\nIncludes pre-order items" : "") + "\n\nName: " + o.customer.name + "\nPhone: " + o.customer.phone + "\nEmail: " + o.customer.email + "\nAddress: " + o.customer.address;
       done = true; K.cart = {}; K.set("kk_coupon", ""); K.saveCart();
-      var sent = K.wa(msg);
+      var sent = K.wa(msg), cust = o.customer, copyMsg = msg.replace("New order ", "Your order ");
       K.meta("Order placed - " + C.store, "Your order has been placed.");
-      app.innerHTML = head("Thank you", "Order placed") + '<section class="wrap"><div class="box ok"><p>Your order number is <b>' + esc(o.id) + "</b>. " + (sent ? "WhatsApp opened with your order details. Please send the message so we can confirm stock and payment." : "Please copy your order details below and send them to us so we can confirm stock and payment.") + '</p><label class="sr" for="ordtxt">Order details</label><textarea id="ordtxt" rows="10" readonly>' + esc(msg) + '</textarea><p class="acts"><button class="btn" id="cp" type="button">Copy order details</button>' + (sent ? "" : "") + '<a class="btn solid" href="account.html">View my orders</a></p></div></section>';
+      app.innerHTML = head("Thank you", "Order placed") + '<section class="wrap"><div class="box ok"><p>Your order number is <b>' + esc(o.id) + "</b>. " + (sent ? "WhatsApp opened with your order and delivery details. Please send the message so we can confirm stock and payment." : "Please send your order and delivery details to us on WhatsApp so we can confirm stock and payment.") + '</p><h2 class="d">Delivery details</h2><p>' + esc(cust.name) + "<br>" + esc(cust.address) + "<br>Mobile: " + esc(cust.phone) + "<br>Email: " + esc(cust.email) + '</p><label class="sr" for="ordtxt">Order details</label><textarea id="ordtxt" rows="10" readonly>' + esc(msg) + '</textarea><p class="acts">' + (C.whatsapp ? '<button class="btn solid" id="ws" type="button">Send to the store on WhatsApp</button>' : "") + '<button class="btn" id="wm" type="button">Send a copy to my WhatsApp</button><button class="btn" id="cp" type="button">Copy order details</button><a class="btn" href="account.html">' + (K.user() ? "View my orders" : "Login") + "</a></p></div></section>";
+      var w1 = $("#ws"); if (w1) w1.addEventListener("click", function () { K.wa(msg); });
+      $("#wm").addEventListener("click", function () { if (!K.waTo(cust.phone, copyMsg)) K.toast("Could not open WhatsApp"); });
       $("#cp").addEventListener("click", function () { K.copy(msg, "Order details copied"); });
     }
     removedNote(); draw();
   };
 
-  pages.contact = function () {
-    app.innerHTML = head("We are here to help", "Contact Us", "Questions, special requests or help with an order? Send us a message.") + '<section class="wrap cartgrid"><form id="cf" class="form box" novalidate>' + K.field("Your name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("How can we help?", "msg", 'rows="6" maxlength="1000"', "textarea") + '<button class="btn solid" type="submit">Send message</button></form><aside class="box sum" aria-label="Contact details"><h2 class="d">Support</h2>' + (C.whatsapp ? '<p>WhatsApp: <a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener noreferrer">+' + esc(String(C.whatsapp).replace(/\D/g, "")) + "</a></p>" : "") + (K.okEmail(C.email) ? '<p>Email: <a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a></p>" : "") + (K.https(C.instagram) ? '<p><a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">Instagram</a></p>' : "") + (!C.whatsapp && !C.email ? '<p class="fine">Use the form and we will get back to you.</p>' : "") + '<p class="fine"><a href="policies.html">Shipping, payment &amp; returns</a></p></aside></section>';
+  function contactDetails() {
+    var wa = String(C.whatsapp || "").replace(/\D/g, ""), ph = String(C.phone || "").replace(/\D/g, ""), rows = [];
+    if (wa) rows.push('<p><b>WhatsApp</b><br><a href="https://wa.me/' + esc(wa) + '" rel="noopener noreferrer">+' + esc(wa) + "</a></p>");
+    if (ph.length >= 10 && ph.length <= 13) rows.push('<p><b>Call us</b><br><a href="tel:+' + esc(ph) + '">+' + esc(ph) + "</a></p>");
+    if (K.okEmail(C.email)) rows.push('<p><b>Email</b><br><a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a></p>");
+    if (K.https(C.instagram)) rows.push('<p><b>Instagram</b><br><a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">' + esc(K.https(C.instagram).replace(/^https:\/\/(www\.)?/i, "")) + "</a></p>");
+    if (C.address) rows.push("<p><b>Address</b><br>" + esc(C.address) + "</p>");
+    if (C.hours) rows.push("<p><b>Hours</b><br>" + esc(C.hours) + "</p>");
+    return rows.length ? rows.join("") : '<p class="fine">Use the form to message us and we will get back to you.</p>';
+  }
+  pages.about = function () {
+    app.innerHTML = head("Our story", "About Us", "Mini treasures that turn small moments into keepsakes that last forever.") + '<section class="wrap prose"><p>Keepsake Kart is a store for die-cast collectors. We hand-pick Hot Wheels, imported editions and collector finds so you can build a collection you are proud of.</p><p>We confirm every order personally, so you always know what is in stock and how to pay before anything ships.</p><p>Cannot find a casting you are hunting? Message us below and we will try to source it.</p><p class="acts"><a class="btn solid" href="collections.html">Explore collections</a><a class="btn" href="policies.html">Shipping, payment &amp; returns</a></p></section>' +
+      '<section class="wrap" id="contact"><p class="eyebrow">Get in touch</p><h2 class="d sh">Contact Us</h2><div class="cartgrid"><form id="cf" class="form box" novalidate>' + REQ + K.field("Your name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("How can we help?", "msg", 'rows="6" maxlength="1000"', "textarea") + '<button class="btn solid" type="submit">Send message</button></form><aside class="box sum" aria-label="Contact details"><h2 class="d">Contact details</h2>' + contactDetails() + '<p class="fine"><a href="policies.html">Shipping, payment &amp; returns</a></p></aside></div></section>';
     var rid = K.qs.get("review"), rp = rid ? K.byId(rid) : null;
     if (rp) $("#f-msg").value = "Review for " + rp.name + ":\nRating (1 to 5): \nMy review: ";
     var nt = K.qs.get("notify");
@@ -272,16 +292,13 @@
       else if (K.okEmail(C.email)) window.location.href = "mailto:" + C.email + "?subject=" + encodeURIComponent("Message from the website") + "&body=" + encodeURIComponent(m);
       else K.copy(m, "Message copied. Add your WhatsApp or email in config.js so messages can be sent directly.");
     });
-  };
-
-  pages.about = function () {
-    app.innerHTML = head("Our story", "About Us", "Mini treasures that turn small moments into keepsakes that last forever.") + '<section class="wrap prose"><p>Keepsake Kart is a store for die-cast collectors. We hand-pick Hot Wheels, imported editions and collector finds so you can build a collection you are proud of.</p><p>We confirm every order personally, so you always know what is in stock and how to pay before anything ships.</p><p>Cannot find a casting you are hunting? <a href="contact.html">Tell us</a> and we will try to source it.</p><p class="acts"><a class="btn solid" href="collections.html">Explore collections</a><a class="btn" href="policies.html">Shipping, payment &amp; returns</a></p></section>';
+    if (window.location.hash === "#contact") { var c = $("#contact"); if (c && c.scrollIntoView) c.scrollIntoView(); }
   };
 
   pages.policies = function () {
     var pol = C.policies || {}, any = pol.shipping || pol.payment || pol.returns;
     function sec(t, s) { return s ? "<h2 class=\"d\">" + t + "</h2>" + String(s).split(/\n\s*\n/).map(function (x) { return "<p>" + esc(x) + "</p>"; }).join("") : ""; }
-    app.innerHTML = head("Good to know", "Shipping, Payment &amp; Returns") + '<section class="wrap prose">' + (any ? sec("Shipping", pol.shipping) + sec("Payment", pol.payment) + sec("Returns", pol.returns) : '<p>Our shipping, payment and returns details are being finalised. Please <a href="contact.html">contact us</a> before ordering and we will confirm everything with you.</p>') + '<p class="acts"><a class="btn" href="contact.html">Contact us</a></p></section>';
+    app.innerHTML = head("Good to know", "Shipping, Payment &amp; Returns") + '<section class="wrap prose">' + (any ? sec("Shipping", pol.shipping) + sec("Payment", pol.payment) + sec("Returns", pol.returns) : '<p>Our shipping, payment and returns details are being finalised. Please <a href="about.html#contact">contact us</a> before ordering and we will confirm everything with you.</p>') + '<p class="acts"><a class="btn" href="about.html#contact">Contact us</a></p></section>';
   };
 
   pages.blog = function () {
@@ -307,43 +324,81 @@
     draw();
   };
 
+  function nextUrl() { var n = K.qs.get("next") || ""; return /^[a-z0-9-]+\.html(\?[a-zA-Z0-9%=&_.-]*)?$/.test(n) ? n : ""; }
+  function goNext() { var n = nextUrl(); if (n) { window.location.href = n; return true; } return false; }
+  var REQ = '<p class="fine">Fields marked <span class="req" aria-hidden="true">*</span> are required.</p>';
+
   pages.account = function () {
-    function help(o) { var m = "Hi, I need help with order " + o.id + "."; if (!K.wa(m)) K.copy(m, "Message copied. Send it to us from the contact page."); }
-    function draw() {
-      var u = K.get("kk_user", null);
-      var note = '<p class="fine box">Your profile and orders are saved in this browser only. They will not appear on other devices and will be lost if you clear your browser data.</p>';
-      if (!u || typeof u !== "object") {
-        app.innerHTML = head("My account", "Create your account", "Create an account to speed up checkout and keep your order history. Your details are saved in this browser.") + '<section class="wrap"><form id="uf" class="form box" novalidate>' + K.field("Full name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("Mobile number (WhatsApp)", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16"') + '<button class="btn solid" type="submit">Create account</button></form>' + note + "</section>";
-        $("#uf").addEventListener("submit", function (e) {
-          e.preventDefault(); var f = e.target;
-          if (!K.validate(f, ["name", "email", "phone"])) return;
-          K.set("kk_user", { name: f.elements.name.value.trim(), email: f.elements.email.value.trim(), phone: K.phoneNorm(f.elements.phone.value) }); K.refreshAcct();
-          draw();
-        });
-        return;
+    var step = 1, pending = "", demo = "";
+    var note = '<p class="fine box">Your account details and order history are saved in this browser only. They will not appear on other devices and will be lost if you clear your browser data.</p>';
+    function setErr(n, m) {
+      var e = $("#e-" + n); if (e) e.textContent = m;
+      var el = $("#f-" + n); if (el) { el.setAttribute("aria-invalid", m ? "true" : "false"); el.classList.toggle("bad", !!m); if (m && el.focus) el.focus(); }
+    }
+    function help(o) { var m = "Hi, I need help with order " + o.id + "."; if (!K.wa(m)) K.copy(m, "Message copied. Send it to us from the About page."); }
+    function loggedOut() {
+      var tab = window.location.hash === "#create" ? "create" : "login", body, title, sub;
+      if (tab === "create") {
+        title = "Create your account"; sub = "Create an account to save your wishlist, check out faster and keep your order history.";
+        body = '<form id="uf" class="form box" novalidate>' + REQ + K.field("Full name", "name", 'autocomplete="name" maxlength="60"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120"') + K.field("Mobile number (WhatsApp)", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16"') + '<button class="btn solid" type="submit">Create account</button><p class="fine">Already have an account? <a href="#login">Login</a>. You will log in later with this mobile number and a one-time code (OTP).</p></form>';
+      } else if (step === 1) {
+        title = "Login"; sub = "Log in with your mobile number and a one-time code (OTP).";
+        body = '<form id="lf" class="form box" novalidate>' + REQ + K.field("Mobile number", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16" value="' + esc(pending) + '"') + '<button class="btn solid" type="submit">Send OTP</button><p class="fine">New here? <a href="#create">Create an account</a>.</p></form>';
+      } else {
+        title = "Enter your code"; sub = "We need to check that it is you.";
+        body = '<form id="of" class="form box" novalidate><p>Enter the 6-digit code for <b>' + esc(pending) + "</b>.</p>" + (C.otpDemo && demo ? '<p class="demo" role="status">Demo mode: SMS is not connected yet, so your code is shown here: <b>' + esc(demo) + "</b></p>" : "") + K.field("One-time code (OTP)", "otp", 'inputmode="numeric" autocomplete="one-time-code" maxlength="6"') + '<button class="btn solid" type="submit">Verify and login</button><p class="acts"><button class="btn sm" type="button" id="rs">Resend OTP</button><button class="btn sm" type="button" id="cn">Change number</button></p></form>';
       }
-      var tab = window.location.hash === "#profile" ? "profile" : "orders", orders = K.get("kk_orders", []); if (!Array.isArray(orders)) orders = [];
-      var body;
+      app.innerHTML = head("My account", title, sub) + '<section class="wrap"><nav class="chips" aria-label="Account"><a class="chip" href="#login"' + (tab === "login" ? ' aria-current="page"' : "") + '>Login</a><a class="chip" href="#create"' + (tab === "create" ? ' aria-current="page"' : "") + '>Create account</a></nav><div class="acc">' + body + note + "</div></section>";
+      var uf = $("#uf"), lf = $("#lf"), of = $("#of");
+      if (uf) uf.addEventListener("submit", function (e) {
+        e.preventDefault(); var f = e.target;
+        if (!K.validate(f, ["name", "email", "phone"])) return;
+        var r = K.createAccount({ name: f.elements.name.value, email: f.elements.email.value, phone: f.elements.phone.value });
+        if (r.err) { setErr("phone", r.err); return; }
+        K.toast("Account created. You are logged in."); if (!goNext()) draw();
+      });
+      if (lf) lf.addEventListener("submit", function (e) {
+        e.preventDefault(); var f = e.target;
+        if (!K.validate(f, ["phone"])) return;
+        var r = K.otp.send(f.elements.phone.value);
+        if (r.err) { setErr("phone", r.err); return; }
+        pending = r.phone; demo = r.code; step = 2; draw();
+      });
+      if (of) {
+        of.addEventListener("submit", function (e) {
+          e.preventDefault(); var f = e.target;
+          if (!K.validate(f, ["otp"])) return;
+          var r = K.otp.verify(pending, f.elements.otp.value);
+          if (r.err) { setErr("otp", r.err); return; }
+          K.login(K.findAccount(pending)); K.toast("Logged in"); step = 1; pending = ""; demo = ""; if (!goNext()) draw();
+        });
+        $("#rs").addEventListener("click", function () { var r = K.otp.send(pending); if (r.err) { setErr("otp", r.err); return; } demo = r.code; K.toast("A new code was sent"); draw(); });
+        $("#cn").addEventListener("click", function () { step = 1; demo = ""; draw(); });
+        var oi = $("#f-otp"); if (oi && oi.focus) oi.focus();
+      }
+    }
+    function loggedIn(u) {
+      var all = K.get("kk_orders", []); if (!Array.isArray(all)) all = [];
+      var orders = all.filter(function (o) { return o && o.customer && o.customer.phone === u.phone; });
+      var tab = window.location.hash === "#profile" ? "profile" : "orders", body;
       if (tab === "orders") {
         body = orders.length ? orders.map(function (o, k) {
           return '<details class="box ord"' + (k === 0 ? " open" : "") + '><summary><b>' + esc(o.id) + '</b><span>' + K.date(o.date) + '</span><span class="stat">' + esc(o.status) + '</span><b>' + K.money(o.total) + '</b></summary>' + o.items.map(function (i) { return '<div class="sl"><span>' + esc(i.name) + " &times; " + i.qty + "</span><span>" + K.money(i.price * i.qty) + "</span></div>"; }).join("") + '<div class="sl"><span>Subtotal</span><span>' + K.money(o.subtotal) + '</span></div>' + (o.discount ? '<div class="sl"><span>Coupon ' + esc(o.coupon) + '</span><span>-' + K.money(o.discount) + "</span></div>" : "") + '<div class="sl"><span>' + esc(o.shipLabel || "Shipping") + '</span><span>' + K.money(o.shipping) + '</span></div><div class="tot"><span>Total</span><b>' + K.money(o.total) + '</b></div><p class="fine">Payment: ' + esc(o.pay) + '<br>Deliver to: ' + esc(o.customer.name) + ", " + esc(o.customer.address) + '<br>Contact: ' + esc(o.customer.phone) + '</p><p class="acts"><button class="btn sm" type="button" data-o="' + k + '" data-a="again">Order again</button><button class="btn sm" type="button" data-o="' + k + '" data-a="help">Ask about this order</button></p></details>';
-        }).join("") + '<p><button class="rm" type="button" id="clr">Clear order history from this device</button></p>' : '<div class="empty box"><p>You have not placed any orders yet.</p><a class="btn solid" href="search.html">Start shopping</a></div>';
+        }).join("") + '<p><button class="rm" type="button" id="clr">Clear my order history from this device</button></p>' : '<div class="empty box"><p>You have not placed any orders yet.</p><a class="btn solid" href="search.html">Start shopping</a></div>';
       } else {
-        body = '<form id="pf" class="form box" novalidate>' + K.field("Full name", "name", 'autocomplete="name" maxlength="60" value="' + esc(u.name || "") + '"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120" value="' + esc(u.email || "") + '"') + K.field("Mobile number (WhatsApp)", "phone", 'autocomplete="tel" inputmode="tel" maxlength="16" value="' + esc(u.phone || "") + '"') + '<button class="btn solid" type="submit">Save profile</button></form>';
+        body = '<form id="pf" class="form box" novalidate>' + REQ + K.field("Full name", "name", 'autocomplete="name" maxlength="60" value="' + esc(u.name || "") + '"') + K.field("Email", "email", 'type="email" autocomplete="email" maxlength="120" value="' + esc(u.email || "") + '"') + '<p>Mobile number: <b>' + esc(u.phone) + '</b> <span class="fine">(you log in with this number)</span></p><button class="btn solid" type="submit">Save profile</button></form>';
       }
-      app.innerHTML = head("My account", "Hi, " + esc(String(u.name).split(" ")[0])) + '<section class="wrap"><nav class="chips" aria-label="Account sections"><a class="chip" href="#orders"' + (tab === "orders" ? ' aria-current="page"' : "") + ">Orders (" + orders.length + ')</a><a class="chip" href="#profile"' + (tab === "profile" ? ' aria-current="page"' : "") + '>Profile</a><button class="chip" id="so" type="button">Sign out</button></nav><div class="acc">' + body + note + "</div></section>";
-      $("#so").addEventListener("click", function () { try { localStorage.removeItem("kk_user"); } catch (e) {} K.refreshAcct(); draw(); });
+      app.innerHTML = head("My account", "Hi, " + esc(String(u.name).split(" ")[0])) + '<section class="wrap"><nav class="chips" aria-label="Account sections"><a class="chip" href="#orders"' + (tab === "orders" ? ' aria-current="page"' : "") + ">Orders (" + orders.length + ')</a><a class="chip" href="#profile"' + (tab === "profile" ? ' aria-current="page"' : "") + '>Profile</a><button class="chip" id="so" type="button">Logout</button></nav><div class="acc">' + body + note + "</div></section>";
+      $("#so").addEventListener("click", function () { K.logout(); step = 1; K.toast("Logged out"); draw(); });
       var pf = $("#pf");
       if (pf) pf.addEventListener("submit", function (e) {
         e.preventDefault(); var f = e.target;
-        if (!K.validate(f, ["name", "email", "phone"])) return;
-        K.set("kk_user", { name: f.elements.name.value.trim(), email: f.elements.email.value.trim(), phone: K.phoneNorm(f.elements.phone.value) }); K.refreshAcct();
-        K.toast("Profile saved"); draw();
+        if (!K.validate(f, ["name", "email"])) return;
+        K.updateUser({ name: f.elements.name.value, email: f.elements.email.value }); K.toast("Profile saved"); draw();
       });
       var clr = $("#clr");
-      if (clr) clr.addEventListener("click", function () { if (window.confirm("Remove all saved orders from this device?")) { K.set("kk_orders", []); draw(); } });
-      var acc = $(".acc");
-      acc.addEventListener("click", function (e) {
+      if (clr) clr.addEventListener("click", function () { if (window.confirm("Remove your saved orders from this device?")) { K.set("kk_orders", all.filter(function (o) { return !(o && o.customer && o.customer.phone === u.phone); })); draw(); } });
+      $(".acc").addEventListener("click", function (e) {
         var b = e.target.closest ? e.target.closest("[data-a]") : null; if (!b) return;
         var o = orders[Number(b.getAttribute("data-o"))]; if (!o) return;
         if (b.getAttribute("data-a") === "help") { help(o); return; }
@@ -352,13 +407,18 @@
         K.toast(added ? "Added to cart" + (skipped ? " (" + skipped + " unavailable item" + (skipped > 1 ? "s" : "") + " skipped)" : "") : "These items are no longer available");
       });
     }
+    function draw() { var u = K.user(); if (u) loggedIn(u); else loggedOut(); }
     draw(); window.addEventListener("hashchange", draw);
   };
 
   pages.wishlist = function () {
     function draw() {
+      if (!K.user()) {
+        app.innerHTML = head("Saved for later", "Wishlist", "Log in to see the cars you saved.") + '<section class="wrap"><div class="empty box"><p>Your wishlist is shown only when you are logged in. Log in or create an account to save cars and see them here.</p><p class="acts"><a class="btn solid" href="account.html?next=wishlist.html#login">Login</a><a class="btn" href="account.html?next=wishlist.html#create">Create account</a></p></div></section>';
+        return;
+      }
       var l = K.wl.map(function (id) { return K.byId(id); }).filter(Boolean);
-      app.innerHTML = head("Saved for later", "Wishlist", l.length ? l.length + (l.length === 1 ? " saved car" : " saved cars") : "") + '<section class="wrap">' + (l.length ? grid(l) + '<p><button class="btn" id="wall" type="button">Add all in-stock to cart</button></p>' : '<div class="empty box"><p>Your wishlist is empty. Tap the heart on any car to save it. Your list is saved in this browser.</p><a class="btn solid" href="search.html">Browse products</a></div>') + "</section>";
+      app.innerHTML = head("Saved for later", "Wishlist", l.length ? l.length + (l.length === 1 ? " saved car" : " saved cars") : "") + '<section class="wrap">' + (l.length ? grid(l) + '<p><button class="btn" id="wall" type="button">Add all in-stock to cart</button></p>' : '<div class="empty box"><p>Your wishlist is empty. Tap the heart on any car to save it.</p><a class="btn solid" href="search.html">Browse products</a></div>') + "</section>";
       var b = $("#wall");
       if (b) b.addEventListener("click", function () { var n = 0; l.forEach(function (p) { if (p.stock && K.add(p.id, 1) === 1) n++; }); K.toast(n ? n + " added to cart" : "Nothing new to add"); });
     }
@@ -366,7 +426,7 @@
   };
 
   function legal(t, upd, secs) {
-    app.innerHTML = head("Legal", t, "Last updated " + upd + ".") + '<section class="wrap prose">' + secs.map(function (x) { return "<h2 class=\"d\">" + x[0] + "</h2>" + x[1].map(function (p) { return "<p>" + p + "</p>"; }).join(""); }).join("") + '<p class="acts"><a class="btn" href="contact.html">Contact us</a></p></section>';
+    app.innerHTML = head("Legal", t, "Last updated " + upd + ".") + '<section class="wrap prose">' + secs.map(function (x) { return "<h2 class=\"d\">" + x[0] + "</h2>" + x[1].map(function (p) { return "<p>" + p + "</p>"; }).join(""); }).join("") + '<p class="acts"><a class="btn" href="about.html#contact">Contact us</a></p></section>';
   }
   pages.privacy = function () {
     K.meta("Privacy Policy - " + C.store, "How " + C.store + " handles the details you share when you browse and order.");
@@ -386,7 +446,7 @@
       ["Product information", ["Photos and colours are for illustration. Collectible packaging can vary between pieces."]],
       ["Shipping, payment and returns", ["See our <a href=\"policies.html\">shipping, payment and returns</a> page for details."]],
       ["Use of the website", ["Please use the website only for lawful purposes and provide accurate details when you order."]],
-      ["Contact", ["Questions about these terms? Please <a href=\"contact.html\">contact us</a>."]]
+      ["Contact", ["Questions about these terms? Please <a href=\"about.html#contact\">contact us</a>."]]
     ]);
   };
 

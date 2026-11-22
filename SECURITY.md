@@ -20,6 +20,9 @@ No website can be guaranteed unhackable. This page lists what is built in, and w
 7. **Check every order before accepting it.** Totals are worked out in the visitor's browser, so a determined visitor could change them. Compare each WhatsApp order with your own price list.
 8. **Protect payments:** share UPI details only inside the WhatsApp chat the customer started, and tell customers you never ask for OTPs or PINs.
 
+## Login
+Login with a mobile number and OTP is a **demo** until SMS is connected: the code is shown on the screen, so it does not protect an account. Accounts live only in the visitor's own browser, so nothing is exposed to other people, but real protection arrives with the backend.
+
 ## Limits
 GitHub Pages cannot send HTTP security headers, so a few protections (such as frame blocking) are done inside the page. Cloudflare closes that gap.
 

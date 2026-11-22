@@ -3,6 +3,11 @@ window.KK_CONFIG = {
   store: "Keepsake Kart", currency: "Rs. ",
   /* Contact: WhatsApp = country code + number, digits only, e.g. "91XXXXXXXXXX". Instagram = full profile URL. */
   whatsapp: "", email: "", instagram: "",
+  /* Optional extra contact details shown on the About page. */
+  phone: "", address: "", hours: "",
+  /* Login by mobile number and OTP. true = demo mode: the code is shown on screen because no SMS service is connected yet.
+     Set to false to switch login off until real SMS is connected. */
+  otpDemo: true,
   /* Full site address (no trailing slash) once published; enables canonical links and search-engine data. */
   siteUrl: "",
   /* Set to true after you add product photos to assets/img/ (named <product id>.jpg). */

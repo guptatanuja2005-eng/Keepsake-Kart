@@ -4,7 +4,7 @@ All store content lives in `assets/js/`. No build step: edit, save, refresh.
 
 | File | What to change |
 |---|---|
-| `config.js` | WhatsApp, email, Instagram, shipping charge (now Rs. 150) and payment option (UPI), policies, coupons, `maxQty` (most of each product per order, now 2), low-stock level, `photos` switch |
+| `config.js` | WhatsApp, phone, email, Instagram, address, opening hours, login mode (`otpDemo`), shipping charge (now Rs. 150) and payment option (UPI), policies, coupons, `maxQty` (most of each product per order, now 2), low-stock level, `photos` switch |
 | `products.js` | Products: id, name, price, category, in stock (1/0), colour, and an optional 7th number = units in stock |
 | `reviews.js` | Customer reviews you have approved |
 | `blog.js` | Blog posts |
@@ -45,7 +45,7 @@ See `backend/README.md`. The database design is a draft and is not connected to 
 
 ## Logo, hero photos and category banners
 - Logo: `assets/img/logo.svg` (also `logo-512.png`, `apple-touch-icon.png`). The home page hero uses three crops of one studio photo: `assets/img/banners/hero-1.jpg` to `hero-3.jpg` (swap the files to change them, keep 3:2).
-- Each collection has a wide banner `assets/img/banners/<name>.jpg` (1200 x 375) and a tile `<name>-tile.jpg` (600 x 450), named from the category in lower case with dashes (for example `mini-gt`). The banners are brand-neutral drawings, not product photos.
+- Each collection has a wide banner `assets/img/banners/<name>.jpg` (1200 x 375) and a tile `<name>-tile.jpg` (600 x 450), named from the category in lower case with dashes (for example `pre-orders`). The banners are brand-neutral drawings, not product photos.
 - Check you have the right to use the hero photo (for example it is yours or properly licensed).
 
 ## Coming Soon
@@ -56,3 +56,18 @@ Search matches product names, brands and collections, ignoring capital letters, 
 
 ## Security
 See `SECURITY.md`. The Content Security Policy in each page allows scripts only from this site. If you ever add a new outside service (analytics, chat widget, fonts), tell me first so the policy can be updated, otherwise the browser will block it.
+
+## Accounts, login and wishlist
+- A customer creates an account with name, email and mobile number, and logs in again later with the mobile number and a one-time code (OTP).
+- **OTP is a demo.** No SMS service is connected, so with `otpDemo: true` in `config.js` the code is shown on the screen. It proves nothing about who is typing. Real SMS codes need a backend (see `backend/README.md`). Setting `otpDemo: false` turns login off, so customers who log out could not log in again; leave it on until SMS is connected.
+- Accounts, order history and wishlists are saved in the visitor's own browser, one wishlist per account. The wishlist heart asks logged-out visitors to log in or create an account, and the Wishlist page shows cars only to a logged-in customer.
+- Checkout accepts guests. "Also create an account" at checkout creates one from the delivery details.
+
+## Contact
+There is no separate Contact page. The About page has the contact form and all contact details. Fill in `whatsapp`, `phone`, `email`, `instagram`, `address` and `hours` in `config.js`; anything left empty is not shown.
+
+## Checkout
+Required fields are marked with a red star. The Place order button turns yellow only when both boxes (address checked, terms agreed) are ticked. After ordering, the delivery details open in WhatsApp to the store, and the customer can also send a copy to their own WhatsApp.
+
+## Removed on request
+LEGO and Mini GT were removed from the collections, brand list, search and banners. To add a brand back, add it to `KK_CATS` and `KK_BRANDS` in `products.js` and create banners named from the brand.

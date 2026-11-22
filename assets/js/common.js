@@ -78,10 +78,11 @@
     t.textContent = m; t.classList.add("on"); clearTimeout(K.toast.t);
     K.toast.t = setTimeout(function () { t.classList.remove("on"); }, 2800);
   };
-  K.wa = function (msg) {
-    var n = String(C.whatsapp || "").replace(/\D/g, ""); if (!n) return false;
+  K.waTo = function (num, msg) {
+    var n = String(num || "").replace(/\D/g, ""); if (!n) return false;
     window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(msg), "_blank", "noopener,noreferrer"); return true;
   };
+  K.wa = function (msg) { return K.waTo(C.whatsapp, msg); };
   K.copy = function (t, ok) {
     try { navigator.clipboard.writeText(t).then(function () { K.toast(ok); }, function () { K.toast("Could not copy. Please copy it manually."); }); } catch (e) { K.toast("Could not copy. Please copy it manually."); }
   };
@@ -97,12 +98,13 @@
     city: function (s) { return /^[\p{L}][\p{L} .'-]{1,49}$/u.test(s) ? "" : "Enter your city."; },
     state: function (s) { return K.STATES.indexOf(s) > -1 ? "" : "Select your state."; },
     pin: function (s) { return /^[1-9]\d{5}$/.test(s) ? "" : "Enter a valid 6-digit PIN code."; },
+    otp: function (s) { return /^\d{6}$/.test(s) ? "" : "Enter the 6-digit code."; },
     msg: function (s) { return s.length >= 10 && s.length <= 1000 ? "" : "Please write at least 10 characters."; }
   };
   K.field = function (label, name, attrs, tag, inner) {
-    var a = ' id="f-' + name + '" name="' + name + '" aria-describedby="e-' + name + '" ' + (attrs || "");
+    var a = ' id="f-' + name + '" name="' + name + '" aria-describedby="e-' + name + '" aria-required="true" ' + (attrs || "");
     var c = tag === "textarea" ? "<textarea" + a + "></textarea>" : tag === "select" ? "<select" + a + ">" + inner + "</select>" : "<input" + a + ">";
-    return '<div class="fld"><label for="f-' + name + '">' + label + "</label>" + c + '<span class="err" id="e-' + name + '"></span></div>';
+    return '<div class="fld"><label for="f-' + name + '">' + label + ' <span class="req" aria-hidden="true">*</span></label>' + c + '<span class="err" id="e-' + name + '"></span></div>';
   };
   K.validate = function (f, names) {
     var first = null;
@@ -119,9 +121,11 @@
   /* ---- stock, wishlist, recently viewed, recommendations, coupons ---- */
   C.lowStock = C.lowStock > 0 ? C.lowStock : 3;
   K.low = function (p) { return !!(p.stock && K.hasQty(p) && p.qty <= C.lowStock); };
-  K.wl = K.get("kk_wish", []);
-  if (!Array.isArray(K.wl)) K.wl = [];
-  K.wl = K.wl.filter(function (id) { return !!K.byId(id); });
+  K.user = function () { var u = K.get("kk_user", null); return u && typeof u === "object" && u.name && u.phone ? u : null; };
+  K.wishKey = function () { var u = K.user(); return u ? "kk_wish_" + String(u.phone).replace(/\D/g, "") : ""; };
+  /* The wishlist belongs to the logged-in account; nothing is shown when logged out. */
+  K.loadWish = function () { var k = K.wishKey(), l = k ? K.get(k, []) : []; K.wl = Array.isArray(l) ? l.filter(function (id) { return !!K.byId(id); }) : []; };
+  K.loadWish();
   K.rv = K.get("kk_rv", []);
   if (!Array.isArray(K.rv)) K.rv = [];
   K.seen = function (id) { K.rv = [id].concat(K.rv.filter(function (x) { return x !== id; })).slice(0, 10); K.set("kk_rv", K.rv); };
@@ -138,8 +142,9 @@
   };
   K.toggleWish = function (id) {
     var p = K.byId(id); if (!p) return;
+    if (!K.user()) { K.loginPrompt("Please log in or create an account to save cars to your wishlist."); return; }
     var i = K.wl.indexOf(id); if (i > -1) K.wl.splice(i, 1); else K.wl.unshift(id);
-    K.set("kk_wish", K.wl);
+    K.set(K.wishKey(), K.wl);
     var on = i < 0, bs = document.querySelectorAll('[data-act="wish"]');
     Array.prototype.forEach.call(bs, function (b) {
       if (b.getAttribute("data-id") !== id) return;
@@ -174,6 +179,77 @@
     return r.err ? { code: code, err: r.err, discount: 0 } : r;
   };
 
+  /* ---- accounts and OTP login (saved in this browser only; real SMS needs a backend) ---- */
+  K.accounts = function () { var a = K.get("kk_accounts", []); return Array.isArray(a) ? a.filter(function (x) { return x && x.name && x.phone; }) : []; };
+  K.findAccount = function (phone) { var p = K.phoneNorm(phone); return p ? K.accounts().filter(function (a) { return a.phone === p; })[0] || null : null; };
+  K.login = function (u) {
+    K.set("kk_user", { name: u.name, email: u.email, phone: u.phone });
+    var k = K.wishKey(), old = K.get("kk_wish", null);
+    if (k && Array.isArray(old) && old.length && !Array.isArray(K.get(k, null))) K.set(k, old.filter(function (id) { return !!K.byId(id); }));
+    try { localStorage.removeItem("kk_wish"); } catch (e) {}
+    K.loadWish(); K.refreshAcct(); K.badge();
+  };
+  K.logout = function () { try { localStorage.removeItem("kk_user"); } catch (e) {} K.wl = []; K.refreshAcct(); K.badge(); };
+  K.createAccount = function (o) {
+    var p = K.phoneNorm(o.phone);
+    if (!p) return { err: "Enter a valid 10-digit Indian mobile number." };
+    if (K.findAccount(p)) return { err: "An account with this number already exists. Please log in." };
+    var u = { name: String(o.name).trim(), email: String(o.email).trim(), phone: p }, l = K.accounts();
+    l.push(u); K.set("kk_accounts", l); K.login(u); return { ok: 1, user: u };
+  };
+  K.updateUser = function (o) {
+    var u = K.user(); if (!u) return;
+    var n = { name: String(o.name).trim(), email: String(o.email).trim(), phone: u.phone };
+    K.set("kk_accounts", K.accounts().map(function (a) { return a.phone === u.phone ? n : a; })); K.set("kk_user", n); K.refreshAcct();
+  };
+  K.ss = {
+    get: function (k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch (e) { return null; } },
+    set: function (k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    del: function (k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  K.otp = {
+    send: function (phone) {
+      var p = K.phoneNorm(phone);
+      if (!p) return { err: "Enter a valid 10-digit Indian mobile number." };
+      if (!K.findAccount(p)) return { err: "No account found for this number on this device. Please create an account first." };
+      if (!C.otpDemo) return { err: "SMS login is not available yet. Please message us on WhatsApp." };
+      var cur = K.ss.get("kk_otp"), now = Date.now();
+      if (cur && cur.phone === p && now - cur.sent < 30000) return { err: "Please wait " + Math.ceil((30000 - (now - cur.sent)) / 1000) + " seconds before asking for a new code." };
+      var n; try { n = window.crypto.getRandomValues(new Uint32Array(1))[0] % 1000000; } catch (e) { n = Math.floor(Math.random() * 1000000); }
+      var code = String(n); while (code.length < 6) code = "0" + code;
+      K.ss.set("kk_otp", { phone: p, code: code, exp: now + 300000, tries: 0, sent: now });
+      return { ok: 1, phone: p, code: code };
+    },
+    verify: function (phone, code) {
+      var p = K.phoneNorm(phone), cur = K.ss.get("kk_otp"), now = Date.now();
+      if (!p || !cur || cur.phone !== p) return { err: "Please request a new code." };
+      if (now > cur.exp) { K.ss.del("kk_otp"); return { err: "That code has expired. Please request a new one." }; }
+      if (cur.tries >= 5) { K.ss.del("kk_otp"); return { err: "Too many wrong attempts. Please request a new code." }; }
+      if (String(code).trim() !== cur.code) { cur.tries++; K.ss.set("kk_otp", cur); return { err: "That code is not right. Please try again." }; }
+      K.ss.del("kk_otp"); return { ok: 1 };
+    }
+  };
+  /* Popup asking the visitor to log in or create an account. */
+  K.loginPrompt = function (why) {
+    var back = document.activeElement, path = String(window.location.pathname || "").split("/").pop() || "index.html";
+    var q = /^[a-z0-9-]+\.html$/.test(path) ? "?next=" + encodeURIComponent(path + (window.location.search || "")) : "";
+    var d = document.createElement("div");
+    d.className = "dlg"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "dlgt");
+    d.innerHTML = '<div class="dlg-box"><button type="button" class="x" aria-label="Close">&times;</button><h2 class="d" id="dlgt">Login to continue</h2><p>' + K.esc(why) + '</p><p class="acts"><a class="btn solid" href="account.html' + q + '#login">Login</a><a class="btn" href="account.html' + q + '#create">Create account</a></p></div>';
+    document.body.appendChild(d);
+    function close() { document.removeEventListener("keydown", key); if (d.parentNode) d.parentNode.removeChild(d); if (back && back.focus) back.focus(); }
+    function key(e) {
+      if (e.key === "Escape") { close(); return; }
+      if (e.key !== "Tab") return;
+      var f = d.querySelectorAll("button, a"); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    d.addEventListener("click", function (e) { if (e.target === d || (e.target.closest && e.target.closest(".x"))) close(); });
+    document.addEventListener("keydown", key);
+    var a = d.querySelector("a"); if (a && a.focus) a.focus();
+  };
+
   /* ---- shared UI ---- */
   K.cardAct = function (p) {
     var q = K.cart[p.id] || 0, n = K.esc(p.name);
@@ -200,22 +276,23 @@
       setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 1200);
     } catch (e) {}
   };
-  K.refreshAcct = function () { var a = K.$("a.acct"), u = K.get("kk_user", null); if (a) a.textContent = u && u.name ? "Hi, " + String(u.name).split(" ")[0] : "Create account"; };
+  K.refreshAcct = function () { var a = K.$("a.acct"), u = K.get("kk_user", null); if (a) a.textContent = u && u.name ? "Hi, " + String(u.name).split(" ")[0] : "Login"; };
   K.card = function (p) {
     var low = K.low(p);
     return '<article class="card' + (p.stock ? "" : " out") + '">' + K.wishBtn(p) + '<a class="ph" href="' + K.pu(p.id) + '" tabindex="-1" aria-hidden="true"><span class="tag' + (p.stock ? (low ? " low" : "") : " out") + '">' + (p.stock ? (low ? "Only " + p.qty + " left" : K.esc(p.cat)) : "Sold out") + "</span>" + K.img(p, "") + '</a><div class="cb"><a class="pn" href="' + K.pu(p.id) + '">' + K.esc(p.name) + '</a><div class="row"><span class="pp">' + K.money(p.price) + '</span><span class="act" data-id="' + p.id + '">' + K.cardAct(p) + "</span></div></div></article>";
   };
   K.chrome = function () {
     var pg = document.body.getAttribute("data-page"), esc = K.esc;
-    var links = [["Home", "index.html", "home"], ["Collections", "collections.html", "collections"], ["Blog", "blog.html", "blog"], ["About", "about.html", "about"], ["Contact", "contact.html", "contact"]];
-    var h = K.$("#hdr"), f = K.$("#ftr"), uu = K.get("kk_user", null);
+    var links = [["Home", "index.html", "home"], ["Collections", "collections.html", "collections"], ["Blog", "blog.html", "blog"], ["About", "about.html", "about"]];
+    var h = K.$("#hdr"), f = K.$("#ftr"), uu = K.user();
+    var ph = String(C.phone || "").replace(/\D/g, ""); ph = ph.length >= 10 && ph.length <= 13 ? ph : "";
     var sug = K.brands.concat(K.cats.map(function (c) { return c.name; }), P.map(function (p) { return p.name; })).filter(function (x, i, a) { return a.indexOf(x) === i; }).map(function (x) { return '<option value="' + esc(x) + '">'; }).join("");
-    var acct = uu && uu.name ? "Hi, " + esc(String(uu.name).split(" ")[0]) : "Create account";
+    var acct = uu && uu.name ? "Hi, " + esc(String(uu.name).split(" ")[0]) : "Login";
     if (h) h.innerHTML = '<div class="bar">' + esc(C.notice || "") + '</div><header class="hd" id="hd"><a class="logo d" href="index.html"><img class="lm" src="assets/img/logo.svg" alt="" width="34" height="34"><span>Keepsake <b>Kart</b></span></a><button class="menu" id="mn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">&#9776;</button><nav class="nav" id="nav" aria-label="Main">' +
       links.map(function (l) { return '<a href="' + l[1] + '"' + (l[2] === pg ? ' aria-current="page"' : "") + ">" + l[0] + "</a>"; }).join("") +
       '</nav><form class="srch" action="search.html" method="get" role="search"><label class="sr" for="hq">Search products</label><input id="hq" name="q" type="search" placeholder="Search name or brand" autocomplete="off" value="' + (pg === "search" ? esc(K.qs.get("q") || "") : "") + '" list="sg"><datalist id="sg">' + sug + '</datalist></form><a class="cartbtn" href="wishlist.html"' + (pg === "wishlist" ? ' aria-current="page"' : "") + '>Wishlist <span id="wcnt" aria-label="saved items">0</span></a><a class="cartbtn acct" href="account.html"' + (pg === "account" ? ' aria-current="page"' : "") + '>' + acct + '</a><a class="cartbtn" href="cart.html"' + (pg === "cart" ? ' aria-current="page"' : "") + '>Cart <span id="cnt" aria-label="items in cart">0</span></a></header>';
     if (f) f.innerHTML = '<footer class="ft"><div><div class="logo d"><img class="lm" src="assets/img/logo.svg" alt="" width="34" height="34"><span>Keepsake <b>Kart</b></span></div><p>Mini treasures that turn small moments into keepsakes that last forever.</p></div><nav class="fl" aria-label="Shop"><b>Shop</b><a href="collections.html">All collections</a><a href="search.html">All products</a><a href="category.html?c=Pre-Orders">Pre-orders</a><a href="cart.html">Cart</a></nav><nav class="fl" aria-label="Store"><b>Store</b><a href="about.html">About us</a><a href="blog.html">Blog</a><a href="policies.html">Shipping, payment &amp; returns</a><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of use</a><a href="account.html">My account</a></nav><div class="fl"><b>Reach us</b>' +
-      (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener noreferrer">WhatsApp</a>' : "") + (K.okEmail(C.email) ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (K.https(C.instagram) ? '<a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">Instagram</a>' : "") + '<a href="contact.html">Contact form</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
+      (C.whatsapp ? '<a href="https://wa.me/' + esc(String(C.whatsapp).replace(/\D/g, "")) + '" rel="noopener noreferrer">WhatsApp</a>' : "") + (ph ? '<a href="tel:+' + ph + '">Call us</a>' : "") + (K.okEmail(C.email) ? '<a href="mailto:' + esc(C.email) + '">' + esc(C.email) + "</a>" : "") + (K.https(C.instagram) ? '<a href="' + esc(K.https(C.instagram)) + '" rel="noopener noreferrer">Instagram</a>' : "") + '<a href="about.html#contact">Contact us</a></div><p class="fine fw">&copy; 2026 Keepsake Kart.</p></footer>';
     var mn = K.$("#mn");
     if (mn) {
       mn.addEventListener("click", function () { var o = K.$("#hd").classList.toggle("open"); mn.setAttribute("aria-expanded", String(o)); });
